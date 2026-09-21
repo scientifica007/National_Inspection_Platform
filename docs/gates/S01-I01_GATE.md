@@ -60,13 +60,37 @@ AI features, generic workflow/rule engines, microservices.
 
 ## Implementation Result
 - branch: `build/slice-01`
-- commit: recorded in the PR after push
+- implementation commit: `2a8ff6e` (implementation), plus this evidence update
+- PR: draft #1 — https://github.com/scientifica007/National_Inspection_Platform/pull/1
 - files/modules changed: `config/`, `identity/`, `templates/`, `static/`,
   `tests/`, `.github/workflows/ci.yml`, `manage.py`, `pyproject.toml`,
-  `requirements*.txt`, `.gitignore`, `.env.example`,
+  `requirements*.txt`, `.gitignore`, `.env.example`, `README.md`,
   `docs/IMPLEMENTATION_NOTES_S01_I01.md`, this gate record
 - migrations: `identity/migrations/0001_initial.py`
 - notes: see `docs/IMPLEMENTATION_NOTES_S01_I01.md`
+
+## Recorded Verification Evidence
+
+| Check | Command | Result |
+|---|---|---|
+| Python | `.venv/bin/python --version` | Python 3.12.14 |
+| Django | `python -c "import django; print(django.get_version())"` | Django 5.2.17 |
+| Ruff lint | `ruff check .` | All checks passed |
+| Ruff format | `ruff format --check .` | 77 files already formatted |
+| Django check | `python manage.py check` | no issues (0 silenced) |
+| Migration check | `python manage.py makemigrations --check --dry-run` | No changes detected |
+| Migrations applied | `python manage.py showmigrations identity` | `[X] 0001_initial` |
+| Tests | `pytest -q` | 61 passed |
+| PostgreSQL | `connection.vendor` | `postgresql` (PostgreSQL 17.11) |
+| CI | GitHub Actions run 35598843802 | pass |
+
+Verified separately that `git status` is clean, `.env` is git-ignored and
+unstaged, and no `db.sqlite3`, dump or token file exists in the tree.
+
+## Environmental Limitations
+- None blocking. A local PostgreSQL 17.11 server was available, so the
+  PostgreSQL test path was fully exercised rather than waived.
+
 
 ## Review Findings
 
