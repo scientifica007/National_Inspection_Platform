@@ -60,7 +60,7 @@ AI features, generic workflow/rule engines, microservices.
 
 ## Implementation Result
 - branch: `build/slice-01`
-- implementation commit: `2a8ff6e` (implementation), plus this evidence update
+- implementation commit: `2a8ff6e` (implementation), `00a4aab` (correction cycle R1)
 - PR: draft #1 — https://github.com/scientifica007/National_Inspection_Platform/pull/1
 - files/modules changed: `config/`, `identity/`, `templates/`, `static/`,
   `tests/`, `.github/workflows/ci.yml`, `manage.py`, `pyproject.toml`,
@@ -126,7 +126,7 @@ Independent review R1 (`docs/gates/S01-I01_CORRECTION_R1.md`) decided
 
 ## Corrections
 - Correction cycle R1: B-01 … B-07 corrected, N-01 cleaned.
-- Implementation commits: `bd6a47c` (corrections) and `0d121a0` (gate record).
+- Correction commit: `00a4aab` (all B-01..B-07 code and test corrections). This gate record is updated in the commit that follows it.
 
 ## Re-verification
 - [x] all blocking findings resolved
