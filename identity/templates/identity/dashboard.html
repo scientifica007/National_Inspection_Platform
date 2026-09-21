@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة المتابعة — المنصة الوطنية للتفتيش{% endblock %}
+
+{% block content %}
+<header class="page__header">
+    <h1 class="page__title">لوحة المتابعة</h1>
+    <p class="page__subtitle">مرحبًا، {{ person.display_name }}</p>
+</header>
+
+<div class="grid">
+    <section class="card" aria-labelledby="identity-heading">
+        <h2 class="card__title" id="identity-heading">الهوية</h2>
+        <ul class="meta-list">
+            <li>
+                <span class="meta-list__label">الشخص</span>
+                <span>{{ person.display_name }}</span>
+            </li>
+            <li>
+                <span class="meta-list__label">الحساب</span>
+                <span>{{ account.username }}</span>
+            </li>
+            <li>
+                <span class="meta-list__label">حالة الحساب</span>
+                <span>
+                    {% if account.is_active %}
+                        <span class="badge badge--success">نشط</span>
+                    {% else %}
+                        <span class="badge badge--neutral">معطَّل</span>
+                    {% endif %}
+                </span>
+            </li>
+        </ul>
+        <p class="text-muted">الهوية ثابتة وصريحة: لا يمكن تنفيذ أي فعل باسم شخص آخر.</p>
+    </section>
+
+    <section class="card" aria-labelledby="authority-heading">
+        <h2 class="card__title" id="authority-heading">الصلاحيات</h2>
+        <ul class="meta-list">
+            <li>
+                <span class="meta-list__label">سلطة إدارية داخل التطبيق</span>
+                <span>
+                    {% if is_platform_admin %}
+                        <span class="badge badge--info">مدير المنصة</span>
+                    {% else %}
+                        <span class="badge badge--neutral">لا</span>
+                    {% endif %}
+                </span>
+            </li>
+            <li>
+                <span class="meta-list__label">صلاحية مهنية فعلية</span>
+                <span>
+                    {% if has_professional_authority %}
+                        <span class="badge badge--success">موجودة</span>
+                    {% else %}
+                        <span class="badge badge--neutral">غير موجودة</span>
+                    {% endif %}
+                </span>
+            </li>
+        </ul>
+        <p class="text-muted">
+            السلطة الإدارية لا تُنشئ تأليفًا مهنيًا. التأليف المهني يتطلب منحة صلاحية سارية.
+        </p>
+    </section>
+</div>
+
+<section class="card" aria-labelledby="grants-heading">
+    <h2 class="card__title" id="grants-heading">منح الصلاحيات</h2>
+    {% if grants %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th scope="col">الصلاحية</th>
+                    <th scope="col">النطاق</th>
+                    <th scope="col">صالحة من</th>
+                    <th scope="col">صالحة إلى</th>
+                    <th scope="col">الحالة</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for grant in grants %}
+                    <tr>
+                        <td>{{ grant.capability_code }}</td>
+                        <td>{{ grant.get_scope_kind_display }}</td>
+                        <td>{{ grant.valid_from|date:"d/m/Y"|default:"—" }}</td>
+                        <td>{{ grant.valid_until|date:"d/m/Y"|default:"—" }}</td>
+                        <td>
+                            {% if grant.is_revoked %}
+                                <span class="badge badge--neutral">ملغاة</span>
+                            {% elif grant.is_valid_at %}
+                                <span class="badge badge--success">سارية</span>
+                            {% else %}
+                                <span class="badge badge--neutral">غير سارية</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty-state">
+            لا توجد منح صلاحيات لهذا الحساب. ارجع إلى مدير المنصة لمنح الصلاحيات المطلوبة.
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -6,15 +6,59 @@
 
 **M0 — Foundation / Domain Design — COMPLETE**
 
-**Vertical Slice 01 — READY FOR AI EXECUTOR / CONTROLLED IMPLEMENTATION**
+**S01-I01 — Project Skeleton + Identity/Authority Foundation — IMPLEMENTED (بانتظار مراجعة مستقلة)**
 
-لا يوجد كود تطبيق بعد. المستودع يحتوي حاليًا على baseline التصميم والمعمارية والحَوْكمة ومواصفات أول تنفيذ.
+الكود موجود الآن على الفرع `build/slice-01`. لم يبدأ أي Increment لاحق.
 
 الحالة المرجعية الحالية:
 `docs/PROJECT_STATE.md`
 
 خريطة الوثائق:
 `docs/DOCUMENTATION_INDEX.md`
+
+سجل بوابة S01-I01:
+`docs/gates/S01-I01_GATE.md`
+
+ملاحظات التنفيذ:
+`docs/IMPLEMENTATION_NOTES_S01_I01.md`
+
+## التشغيل المحلي
+
+المتطلبات: Python 3.12 و PostgreSQL.
+
+```bash
+# 1) البيئة الافتراضية والاعتماديات
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+
+# 2) إعداد البيئة
+cp .env.example .env
+# عدّل .env محليًا: DJANGO_SECRET_KEY وبيانات PostgreSQL
+# لا تُودِع ملف .env إطلاقًا.
+
+# 3) قاعدة البيانات (PostgreSQL)
+sudo -u postgres psql -c "CREATE USER national_inspection WITH PASSWORD 'change-me-local-only' CREATEDB CREATEROLE;"
+sudo -u postgres psql -c "CREATE DATABASE national_inspection OWNER national_inspection;"
+
+# 4) الترحيلات والتشغيل
+python manage.py migrate
+python manage.py createsuperuser   # سينشئ حسابًا وشخصًا مرتبطًا به
+python manage.py runserver
+```
+
+الفحوصات:
+
+```bash
+ruff check .
+ruff format --check .
+python manage.py check
+python manage.py makemigrations --check --dry-run
+pytest -q
+```
+
+ملاحظة: في اختبارات التكامل قد تحتاج صلاحية إنشاء قاعدة بيانات مؤقتة؛
+يُنشئها pytest-django تلقائيًا عند منح المستخدم `CREATEDB`.
 
 ## المبادئ المؤسسة
 
