@@ -14,7 +14,7 @@
 | R-007 | Frontend becomes coupled to business logic, blocking redesign | High | presentation separation; services/selectors; Design Tokens | Controlled |
 | R-008 | Future features are pre-built speculatively and increase maintenance cost | High | bounded increments; explicit Deferred scope | Controlled |
 | R-009 | AI executor silently invents domain policy | High | executor source precedence; STOP on contradiction | Controlled |
-| R-010 | Same AI trusts its own implementation and misses defects | High | separate review pass; gate evidence; independent audit mindset | Active |
+| R-010 | Same AI trusts its own implementation and misses defects | High | separate review pass; reviewer prompt; gate evidence | Active |
 | R-011 | Real personal/official data enters public GitHub repository | Critical | no-real-data rule; security/data governance | Active |
 | R-012 | SQLite-only success hides PostgreSQL behavior defects | Medium/High | PostgreSQL canonical tests | Controlled |
 | R-013 | Migrations damage data/history | Critical | small reviewed migrations; backups/rollback reasoning before destructive change | Future control |
@@ -25,6 +25,8 @@
 | R-018 | Team hierarchy is encoded as legal permanent tree | High | contextual temporal membership/leadership model | Controlled conceptually |
 | R-019 | Amendment is deferred too long and real records are used anyway | Critical | explicit production prohibition before Amendment | Active |
 | R-020 | Documentation diverges from code | High | checkpoint docs; traceability; review requires documentation update | Active |
+| R-021 | `main` is currently unprotected and could receive uncontrolled direct writes | High | repository governance documents required branch protection review before routine implementation merges | Active |
+| R-022 | Public visibility is mistaken for an intentional reuse/license policy | Medium | legal/licensing note; owner decision deferred before external contribution/distribution matters | Active |
 
 ## Review rule
 
