@@ -430,3 +430,123 @@ The gate remains **HOLD — RE-REVIEW REQUIRED**. Neither this pass nor any
 previous one claims PASS; closing the findings and any `PASS — NEXT INCREMENT
 ALLOWED` belong to the independent reviewer.
 
+## 13. Correction Cycle R4 (R4-B01, R4-B02)
+
+Fourth correction-only pass, on the same `build/slice-01` branch. No S01-I02
+work was started and no product surface was added.
+
+### R4-B01 — administrative authority requires a persisted actor
+
+`identity.permissions.require_administrative_authority` read the actor through
+`getattr`:
+
+```python
+if not getattr(actor, "is_platform_admin", False):
+    ...
+if not actor.is_active:
+    ...
+```
+
+That trusted duck typing. A bare `object()` carrying no attributes was denied by
+luck, but any object exposing `is_platform_admin = True` and `is_active = True`
+passed — including a fabricated stand-in and an unsaved `Account` instance whose
+row was never written. A stale instance whose row had since been deactivated or
+demoted in the database also still passed, because only the in-memory flags were
+consulted. In each case the mutation proceeded with no persisted acting identity
+that actually held administrative authority.
+
+The primitive now resolves the actor against the database:
+
+```python
+if not isinstance(actor, Account):
+    raise PermissionDeniedError(...)  # fabricated / foreign object
+if actor.pk is None:
+    raise PermissionDeniedError(...)  # unsaved Account
+
+stored = Account.objects.filter(pk=actor.pk).values_list("is_platform_admin", "is_active").first()
+if stored is None:
+    raise PermissionDeniedError(...)  # row no longer exists
+
+is_admin, is_active = stored  # stored state decides
+```
+
+The stored row, not the caller's object, is authoritative. A caller holding a
+stale instance is therefore denied once the row is deactivated or demoted, while
+a legitimate current Platform Admin is still allowed. The two explicit checks
+(`isinstance`, `pk is None`) give precise failures, and the `None` branch covers
+a deleted row.
+
+Deliberately unchanged: delegation is still not implemented; no new capability
+or acceptance surface was added; Django's technical superuser layer is still not
+consulted, so a technical superuser without the administrative flag remains
+denied; and administrative authority still never grants professional authorship.
+The query is one indexed primary-key lookup, so the per-mutation cost is
+negligible.
+
+### R4-B02 — stale PR verification summary corrected
+
+PR #1's top verification table still showed the R2 totals (94 formatted files,
+162 tests). It now reflects the R4 state (105 formatted files, 218 tests). The
+historical R1/R2/R3 sections are retained unchanged, so the review trail stays
+intact rather than being rewritten.
+
+### Regression tests added (R4)
+
+`identity/tests/test_admin_actor_persistence.py` — 19 tests covering:
+
+| # | Requirement | Test |
+|---|---|---|
+| 1 | plain object denied | `test_plain_object_is_denied`, `test_none_is_denied` |
+| 2 | fabricated admin-like object denied | `test_fabricated_admin_like_object_is_denied`, `test_simple_namespace_admin_is_denied` |
+| 3 | unsaved Account with the flag denied | `test_unsaved_platform_admin_is_denied` |
+| — | deleted row denied | `test_a_deleted_account_is_denied` |
+| 4 | persisted ordinary Account denied | `test_persisted_ordinary_account_is_denied` |
+| 5 | persisted inactive Platform Admin denied | `test_persisted_inactive_platform_admin_is_denied` |
+| 6 | persisted active Platform Admin allowed | `test_persisted_active_platform_admin_is_allowed` |
+| 7 | stale actor denied after row deactivated | `test_stale_actor_denied_after_its_row_is_deactivated` |
+| 8 | stale actor denied after row demoted | `test_stale_actor_denied_after_its_row_is_demoted` |
+| 9 | technical superuser without the flag denied | `test_superuser_without_platform_admin_is_denied`, `test_superuser_flag_alone_changes_nothing` |
+| 10 | mutation services cannot run with such an actor | `TestMutationServicesInheritTheGate` (4 tests, incl. no grant created) |
+
+A further test confirms the legitimate case is not broken by the extra lookup
+(`test_stale_actor_allowed_while_its_row_stays_admin`), and
+`test_platform_admin_flag_alone_changes_the_decision` pins that the
+administrative flag the primitive owns is the one that decides.
+
+The suite grew from 199 to 218 tests.
+
+The tests were confirmed to detect the original defect: restoring the
+duck-typed primitive made **10 of the 19 fail**, including every fabricated,
+unsaved, deleted-row and stale-actor case. They are genuine regression tests.
+
+### A pre-existing guard required a one-line docstring wording change
+
+`identity/tests/test_account_creation_authorization.py::test_permissions_module_has_no_creation_shortcut`
+asserts that `inspect.getsource(identity.permissions)` does not contain the
+substring `is_superuser`. My first R4 docstring explained the layer separation
+using that identifier, which the guard flagged. The behavioural guarantee is now
+asserted properly instead — `test_superuser_flag_alone_changes_nothing` toggles
+the flags and requires denial — and the docstring was reworded to describe the
+layer without naming the field. The guard itself was left untouched. This is the
+only change outside the R4 findings, and it is confined to a comment.
+
+### Verification (R4)
+
+| Check | Command | Result |
+|---|---|---|
+| Ruff lint | `ruff check .` | All checks passed |
+| Ruff format | `ruff format --check .` | 105 files already formatted |
+| Django check | `python manage.py check` | no issues (0 silenced) |
+| Migration check | `makemigrations --check --dry-run` | No changes detected |
+| Fresh-DB path | `POSTGRES_DB=nip_r4 manage.py migrate` | full chain applied OK |
+| Tests | `pytest -q` | 218 passed |
+| PostgreSQL | `connection.vendor` | `postgresql` |
+
+No migration change was produced or required: the correction is confined to a
+Python authority primitive, so the schema is untouched.
+
+### Gate
+
+The gate remains **HOLD — RE-REVIEW REQUIRED**. As in R1–R3, this executor does
+not self-declare PASS.
+

@@ -76,12 +76,12 @@ AI features, generic workflow/rule engines, microservices.
 | Python | `.venv/bin/python --version` | Python 3.12.14 |
 | Django | `python -c "import django; print(django.get_version())"` | Django 5.2.17 |
 | Ruff lint | `ruff check .` | All checks passed |
-| Ruff format | `ruff format --check .` | 102 files already formatted |
+| Ruff format | `ruff format --check .` | 105 files already formatted |
 | Django check | `python manage.py check` | no issues (0 silenced) |
 | Migration check | `python manage.py makemigrations --check --dry-run` | No changes detected |
 | Migrations applied | `python manage.py showmigrations identity` | `[X] 0001_initial` |
 | Fresh DB migration path | `POSTGRES_DB=<fresh> python manage.py migrate` | all migrations applied OK |
-| Tests | `pytest -q` | 199 passed |
+| Tests | `pytest -q` | 218 passed |
 | PostgreSQL | `connection.vendor` | `postgresql` (PostgreSQL 17.11) |
 | CI | GitHub Actions run on the pushed head | see PR #1 |
 
@@ -174,21 +174,54 @@ corrected.
 - The product Platform Admin management UI remains deferred.
 - `AuditEvent` coverage remains deferred to the audit increment.
 
+## Corrections — Cycle R4
+
+Correction cycle R4: `R4-B01` (code) and `R4-B02` (PR summary) corrected. See
+`docs/gates/S01-I01_CORRECTION_R4.md` and
+`docs/IMPLEMENTATION_NOTES_S01_I01.md` §13 for the implementation detail.
+
+### Blocking — Correction Cycle R4
+
+Independent re-review R4 confirmed R3-B01…R3-B03 closed and raised one further
+blocking finding plus one documentation finding.
+
+| ID | Severity | Status | Correction |
+|---|---|---|---|
+| R4-B01 | High | corrected | `identity.permissions.require_administrative_authority` read the actor through `getattr(actor, "is_platform_admin", False)` plus `actor.is_active`, so it trusted duck typing. A fabricated object exposing those two attributes, or an unsaved `Account`, satisfied the primitive with no persisted acting identity; a stale instance whose row had since been deactivated or demoted also still passed. It now rejects non-`Account` actors and unsaved Accounts, and re-reads the stored row (`values_list("is_platform_admin", "is_active")`), so the current persisted state decides. A missing row is denied. Django's technical superuser layer is still not consulted and delegation is still not implemented, so no new capability or acceptance surface was added. |
+| R4-B02 | Low | corrected | The top of PR #1's verification summary still showed R2 totals (94 formatted files, 162 tests). It now reflects R4 (105 formatted files, 218 tests) while the historical R1/R2/R3 sections are retained unchanged. |
+
+### Non-blocking (R4)
+- The raw `QuerySet.update()` Person-binding bypass remains unsupported, as
+  accepted in R2 scope.
+- The product Platform Admin management UI remains deferred.
+- `AuditEvent` coverage remains deferred to the audit increment.
+
+### Operational security notice (R4)
+
+Independent review R4 recorded that the execution transcript supplied with the
+earlier pass exposed an access-token-like GitHub credential in terminal output
+before sanitization. It was not present in the repository diff. No such value
+appears in any commit, document, test or report from this correction pass, and
+remote output was inspected with the credential sanitized. The credential is
+treated as exposed and its rotation is the maintainer's action, not this
+executor's.
+
 ## Re-verification
-- [x] all blocking findings resolved (R1, R2 and R3)
-- [x] regression tests added (110 across R1/R2; 37 added in R3)
-- [x] relevant checks pass (199 tests, Ruff, Django check, migration check, fresh-DB migration path, CI)
+- [x] all blocking findings resolved (R1, R2, R3 and R4)
+- [x] regression tests added (110 across R1/R2; 37 in R3; 19 in R4)
+- [x] relevant checks pass (218 tests, Ruff, Django check, migration check, fresh-DB migration path, CI)
 - [x] new R3 tests confirmed to fail against the pre-correction implementation
+- [x] new R4 tests confirmed to fail against the pre-correction implementation (10 of 19)
 
 ## Checkpoint Decision
 
 `HOLD — RE-REVIEW REQUIRED`
 
-Correction cycle R3 is complete: the three blocking findings were corrected and
-regression-tested, and the full suite passes against PostgreSQL with CI green.
-This record does **not** claim PASS. Closing each blocker, and any subsequent
-`PASS — NEXT INCREMENT ALLOWED`, is reserved for the independent reviewer or
-maintainer. S01-I02 is not started.
+Correction cycles R1 through R4 are complete: every blocking finding was
+corrected and regression-tested, and the full suite passes against PostgreSQL
+with CI green. This record does **not** claim PASS. Closing each blocker, and any
+subsequent `PASS — NEXT INCREMENT ALLOWED`, is reserved for the independent
+reviewer or maintainer. S01-I02 is not started.
 
 ## Next Increment
 Not defined. `S01-I02` remains unauthorized until S01-I01 is explicitly marked

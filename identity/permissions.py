@@ -218,10 +218,34 @@ def require_administrative_authority(
     An ``account.manage`` CapabilityGrant does not satisfy this. Implementing
     partial delegation here would let a non-admin escalate; explicit, bounded
     delegation is deferred (docs/AUTHORITY_MODEL.md §Delegation).
+
+    The actor must be a *real, persisted* Account whose current database row is
+    active and flagged as Platform Admin (R4-B01). The caller's in-memory flags
+    are never trusted on their own: a fabricated object, an unsaved Account, or
+    a stale instance whose row was since deactivated or demoted is rejected.
+    The flag is re-read from the database so the decision reflects stored
+    authority rather than whatever the caller happened to hold in memory.
+
+    Django's technical superuser layer is not consulted. It stays separate
+    from application administrative authority, so a technical superuser without
+    the administrative flag remains denied — and neither flag grants
+    professional authorship.
     """
-    if not getattr(actor, "is_platform_admin", False):
+    if not isinstance(actor, Account):
+        raise PermissionDeniedError(f"هذا الفعل الإداري ({action}) يتطلب حسابًا حقيقيًا محفوظًا.")
+    if actor.pk is None:
+        raise PermissionDeniedError(f"لا يمكن تنفيذ فعل إداري ({action}) بحساب غير محفوظ.")
+
+    stored = (
+        Account.objects.filter(pk=actor.pk).values_list("is_platform_admin", "is_active").first()
+    )
+    if stored is None:
+        raise PermissionDeniedError(f"لا يمكن تنفيذ فعل إداري ({action}) بحساب غير موجود.")
+
+    is_admin, is_active = stored
+    if not is_admin:
         raise PermissionDeniedError(f"هذا الفعل الإداري ({action}) متاح لمدير المنصة فقط.")
-    if not actor.is_active:
+    if not is_active:
         raise PermissionDeniedError(f"الحساب المعطّل لا يمكنه تنفيذ فعل إداري ({action}).")
 
 
