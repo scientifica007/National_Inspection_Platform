@@ -20,6 +20,8 @@ Do not implement the complete national platform.
 
 ## Source of truth order
 
+Start with `docs/DOCUMENTATION_INDEX.md`, which is the canonical map.
+
 When implementation questions arise, use this order:
 
 1. `docs/INVARIANTS.md`
@@ -31,7 +33,9 @@ When implementation questions arise, use this order:
 7. `docs/VERTICAL_SLICE_01.md`
 8. `docs/VERTICAL_SLICE_01_DATA_MODEL.md`
 9. `docs/ENGINEERING_CONVENTIONS.md`
-10. accepted ADRs
+10. `docs/SECURITY_AND_DATA_GOVERNANCE.md`
+11. `docs/REPOSITORY_GOVERNANCE.md`
+12. accepted ADRs
 
 If documents truly conflict, stop and report the contradiction. Do not silently choose a new policy.
 
@@ -175,6 +179,7 @@ Human acceptance starts only after all Slice 01 increments have passed their mac
 - README setup/run instructions.
 - demo/test data creation command that is idempotent and clearly non-production.
 - architecture note for any implementation decision not already covered.
+- checkpoint record using `docs/CHECKPOINT_RECORD_TEMPLATE.md`.
 - Human Acceptance checklist for the owner.
 
 ## Stop conditions
