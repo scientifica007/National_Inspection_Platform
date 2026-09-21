@@ -6,14 +6,21 @@ rules can be tested on their own (docs/TEST_STRATEGY.md).
 
 Two independent authority dimensions are kept apart (ADR-0003):
 
-1. Administrative authority — expressed by ``Account.is_platform_admin`` and
-   limited to ``ADMINISTRATIVE_CAPABILITIES``.
+1. Administrative authority — expressed by ``Account.is_platform_admin``.
 2. Professional authority — expressed only by ``CapabilityGrant`` rows.
 
 Admin status therefore never produces professional authorship, and there is no
 helper anywhere that lets an Account act as another Person. Where professional
 authorship is required, callers must pass the subject Person explicitly; the
 recorded actor is always the real acting Account/Person.
+
+Administrative mutation authority is deliberately narrow in S01-I01: only a
+real Platform Admin (``is_platform_admin``) may run account-management
+mutations. An ``account.manage`` grant does **not** satisfy them, because
+explicit, bounded delegation is deferred to a later increment
+(docs/AUTHORITY_MODEL.md §Delegation). Partially implementing it here would let
+a non-admin escalate to arbitrary capabilities. The broader delegation model
+remains intact for the increment that owns it.
 """
 
 from __future__ import annotations
@@ -136,13 +143,15 @@ def evaluate_capability(
     subject = _subject_for(account, subject_person)
 
     # Administrative capability: satisfied by administrative authority only.
+    #
+    # A CapabilityGrant must NOT satisfy it in S01-I01. Accepting one here would
+    # let a non-admin granted `account.manage` then grant itself or others
+    # arbitrary capabilities, bypassing scope and delegable semantics. Explicit
+    # delegation is deferred, so the rule is simply: real Platform Admin only.
     if capability_code in ADMINISTRATIVE_CAPABILITIES:
         if account.is_platform_admin:
             return AuthorityDecision(True, capability_code, "platform_admin")
-        # A capability grant may also be used to delegate administration.
-        if _active_grants(account, capability_code, now):
-            return AuthorityDecision(True, capability_code, "granted")
-        return AuthorityDecision(False, capability_code, "not_admin")
+        return AuthorityDecision(False, capability_code, "not_platform_admin")
 
     # Professional capability: never satisfied by administrative status.
     grants = _active_grants(account, capability_code, now)
@@ -191,6 +200,29 @@ def require_capability(
 def is_platform_admin(account: Account) -> bool:
     """Whether the Account holds administrative authority."""
     return bool(account.is_platform_admin)
+
+
+def require_administrative_authority(
+    actor: Account, *, action: str = "administrative action"
+) -> None:
+    """Authorise an account-management *mutation*.
+
+    This is the mutation-side primitive, deliberately separate from
+    ``evaluate_capability(ACCOUNT_MANAGE)`` so the two meanings never blur:
+
+    - ``evaluate_capability(..., ACCOUNT_MANAGE)`` answers "does this Account
+      hold administrative authority?" — used for display/query decisions.
+    - ``require_administrative_authority`` authorises an actual mutation and is
+      satisfied only by a real Platform Admin in S01-I01.
+
+    An ``account.manage`` CapabilityGrant does not satisfy this. Implementing
+    partial delegation here would let a non-admin escalate; explicit, bounded
+    delegation is deferred (docs/AUTHORITY_MODEL.md §Delegation).
+    """
+    if not getattr(actor, "is_platform_admin", False):
+        raise PermissionDeniedError(f"هذا الفعل الإداري ({action}) متاح لمدير المنصة فقط.")
+    if not actor.is_active:
+        raise PermissionDeniedError(f"الحساب المعطّل لا يمكنه تنفيذ فعل إداري ({action}).")
 
 
 def can_perform_professional_work(account: Account) -> bool:

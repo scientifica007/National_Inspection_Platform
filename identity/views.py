@@ -15,7 +15,7 @@ from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods
 
 from .forms import RTLocalAuthenticationForm
-from .permissions import Capability, can_perform_professional_work, is_platform_admin
+from .permissions import can_perform_professional_work, is_platform_admin
 from .selectors import accounts_visible_to, grants_for
 
 
@@ -48,7 +48,6 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "is_platform_admin": is_platform_admin(account),
         "has_professional_authority": can_perform_professional_work(account),
         "grants": grants_for(account),
-        "can_manage_accounts": Capability.ACCOUNT_MANAGE,
     }
     return render(request, "identity/dashboard.html", context)
 

@@ -76,13 +76,13 @@ AI features, generic workflow/rule engines, microservices.
 | Python | `.venv/bin/python --version` | Python 3.12.14 |
 | Django | `python -c "import django; print(django.get_version())"` | Django 5.2.17 |
 | Ruff lint | `ruff check .` | All checks passed |
-| Ruff format | `ruff format --check .` | 77 files already formatted |
+| Ruff format | `ruff format --check .` | 86 files already formatted |
 | Django check | `python manage.py check` | no issues (0 silenced) |
 | Migration check | `python manage.py makemigrations --check --dry-run` | No changes detected |
 | Migrations applied | `python manage.py showmigrations identity` | `[X] 0001_initial` |
-| Tests | `pytest -q` | 61 passed |
+| Tests | `pytest -q` | 111 passed |
 | PostgreSQL | `connection.vendor` | `postgresql` (PostgreSQL 17.11) |
-| CI | GitHub Actions run 35598843802 | pass |
+| CI | GitHub Actions run on correction head | pass |
 
 Verified separately that `git status` is clean, `.env` is git-ignored and
 unstaged, and no `db.sqlite3`, dump or token file exists in the tree.
@@ -90,35 +90,58 @@ unstaged, and no `db.sqlite3`, dump or token file exists in the tree.
 ## Environmental Limitations
 - None blocking. A local PostgreSQL 17.11 server was available, so the
   PostgreSQL test path was fully exercised rather than waived.
+- The execution container was recycled twice during the correction pass; the
+  PostgreSQL server and virtualenv were reinstalled and the suite re-run, so the
+  evidence above reflects a completed run, not a cached one.
 
 
 ## Review Findings
 
-### Blocking
-- Not yet reviewed. Independent review is the next required step
-  (`docs/AI_REVIEWER_PROMPT_01.md`).
+### Blocking — Correction Cycle R1
+
+Independent review R1 (`docs/gates/S01-I01_CORRECTION_R1.md`) decided
+**HOLD — CORRECTION REQUIRED**. All seven blockers were corrected; see
+`docs/IMPLEMENTATION_NOTES_S01_I01.md` for the implementation detail.
+
+| ID | Severity | Status | Correction |
+|---|---|---|---|
+| B-01 | Critical | corrected | Administrative mutation commands are satisfied only by a real `is_platform_admin` account. An `account.manage` grant no longer authorizes them, so a non-admin cannot self-escalate. New primitive `require_administrative_authority` keeps mutation authorization distinct from the query/display meaning of `evaluate_capability(ACCOUNT_MANAGE)`. |
+| B-02 | High | corrected | `AccountAdmin` now extends Django `UserAdmin` with `AdminUserCreationForm` / `UserChangeForm`, so password handling stays hashing-aware and no raw password field is exposed. |
+| B-03 | High | corrected | `DJANGO_SECRET_KEY` is required when `DEBUG` is not enabled; settings raise `ImproperlyConfigured` at import. In debug a labelled development-only fallback remains. |
+| B-04 | High | corrected | `granted_by_account` is non-null with `on_delete=PROTECT`. Provenance cannot be absent and cannot be silently erased. Corrected in the initial migration (no compatibility migration chain). |
+| B-05 | Medium | corrected | Automatic Person + Account creation happens inside one `transaction.atomic()` block, so an Account failure rolls the automatic Person back. |
+| B-06 | Medium | corrected | The `license = { text = "Proprietary" }` declaration was removed from `pyproject.toml`. Licensing is left undecided; no other licence was substituted. |
+| B-07 | Medium | corrected | `CREATEROLE` was removed from the README setup; only `CREATEDB` is granted and the note states `CREATEROLE`/`SUPERUSER` are not granted. |
 
 ### Non-blocking
-- To be recorded after review.
+- N-01 (corrected): the unused, mis-typed `can_manage_accounts` context value was
+  removed from the dashboard view along with its now-unused import.
+- N-02 (deferred, as instructed): the Platform Admin product UI remains
+  read-only. Retained for a future increment before Human Acceptance.
 
 ### Architecture/Domain observations
-- To be recorded after review.
+- The correction preserves the broader delegation model in
+  `docs/AUTHORITY_MODEL.md` without partially implementing it. Explicit,
+  bounded delegation remains future work; B-01 only removes the unsafe shortcut.
 
 ## Corrections
-- None yet.
+- Correction cycle R1: B-01 … B-07 corrected, N-01 cleaned.
+- Implementation commits: `bd6a47c` (corrections) and `0d121a0` (gate record).
 
 ## Re-verification
-- [ ] all blocking findings resolved
-- [ ] regression tests added
-- [ ] relevant checks pass
+- [x] all blocking findings resolved
+- [x] regression tests added
+- [x] relevant checks pass (111 tests, Ruff, Django check, migration check, CI)
 
 ## Checkpoint Decision
 
-`HOLD — REVIEW REQUIRED`
+`HOLD — RE-REVIEW REQUIRED`
 
-The increment is implemented and self-verified, but a checkpoint decision may
-only be recorded after an independent review pass. No `PASS — NEXT INCREMENT
-ALLOWED` decision is claimed here, and S01-I02 is not started.
+Correction cycle R1 is complete: all seven blocking findings were corrected and
+regression-tested, and the full suite passes against PostgreSQL with CI green.
+This record does **not** claim PASS. Closing each blocker, and any subsequent
+`PASS — NEXT INCREMENT ALLOWED`, is reserved for the independent reviewer or
+maintainer. S01-I02 is not started.
 
 ## Next Increment
 Not defined. `S01-I02` remains unauthorized until S01-I01 is explicitly marked

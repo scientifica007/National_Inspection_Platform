@@ -16,9 +16,8 @@ from .models import Account, CapabilityGrant, Person
 from .permissions import (
     ADMINISTRATIVE_CAPABILITIES,
     ALL_CAPABILITIES,
-    Capability,
     PermissionDeniedError,
-    require_capability,
+    require_administrative_authority,
 )
 
 
@@ -67,10 +66,12 @@ def grant_capability(
 ) -> CapabilityGrant:
     """Grant a Capability to an Account.
 
-    Only an Account holding ``account.manage`` may grant capabilities. The
-    grant records which Account issued it so provenance is preserved.
+    Only a real Platform Admin may grant capabilities. An ``account.manage``
+    grant does not satisfy this check, so a non-admin cannot escalate by
+    obtaining or issuing administrative capabilities. The issuing Account is
+    recorded on the grant and preserved for the grant's lifetime.
     """
-    require_capability(actor, Capability.ACCOUNT_MANAGE)
+    require_administrative_authority(actor, action="grant_capability")
 
     if capability_code not in ALL_CAPABILITIES:
         raise ValueError(f"Unknown capability code: {capability_code!r}")
@@ -94,7 +95,7 @@ def grant_capability(
 @transaction.atomic
 def revoke_capability(*, actor: Account, grant: CapabilityGrant) -> CapabilityGrant:
     """Revoke a grant without deleting history."""
-    require_capability(actor, Capability.ACCOUNT_MANAGE)
+    require_administrative_authority(actor, action="revoke_capability")
     if grant.revoked_at is None:
         grant.revoked_at = timezone.now()
         grant.save(update_fields=["revoked_at"])
@@ -104,7 +105,7 @@ def revoke_capability(*, actor: Account, grant: CapabilityGrant) -> CapabilityGr
 @transaction.atomic
 def deactivate_account(*, actor: Account, account: Account) -> Account:
     """Disable an Account without deleting the Person or their history."""
-    require_capability(actor, Capability.ACCOUNT_MANAGE)
+    require_administrative_authority(actor, action="deactivate_account")
     if account.pk == actor.pk:
         raise PermissionDeniedError("لا يمكن لمدير المنصة تعطيل حسابه الخاص.")
     account.is_active = False

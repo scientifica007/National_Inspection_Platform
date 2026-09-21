@@ -38,7 +38,7 @@ cp .env.example .env
 # لا تُودِع ملف .env إطلاقًا.
 
 # 3) قاعدة البيانات (PostgreSQL)
-sudo -u postgres psql -c "CREATE USER national_inspection WITH PASSWORD 'change-me-local-only' CREATEDB CREATEROLE;"
+sudo -u postgres psql -c "CREATE USER national_inspection WITH PASSWORD 'change-me-local-only' CREATEDB;"
 sudo -u postgres psql -c "CREATE DATABASE national_inspection OWNER national_inspection;"
 
 # 4) الترحيلات والتشغيل
@@ -57,8 +57,8 @@ python manage.py makemigrations --check --dry-run
 pytest -q
 ```
 
-ملاحظة: في اختبارات التكامل قد تحتاج صلاحية إنشاء قاعدة بيانات مؤقتة؛
-يُنشئها pytest-django تلقائيًا عند منح المستخدم `CREATEDB`.
+ملاحظة: `CREATEDB` هي الصلاحية الوحيدة المطلوبة محليًا، لأن pytest-django
+يُنشئ قاعدة اختبار مؤقتة. لا تُمنح `CREATEROLE` أو `SUPERUSER`.
 
 ## المبادئ المؤسسة
 

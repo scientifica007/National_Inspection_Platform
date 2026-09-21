@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "National Inspection Platform — controlled implementation of Vertical Slice 01 (S01-I01)."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
-license = { text = "Proprietary" }
 dependencies = [
     "Django~=5.2.0",
     "psycopg[binary]~=3.2",

@@ -117,3 +117,104 @@ No `institutions`, `knowledge`, `visits`, `records`, `audit`, `missions`,
 empty placeholder. A test asserts that neither `INSTALLED_APPS` nor the app
 registry contains any deferred module.
 
+## 10. Correction Cycle R1 (B-01 … B-07)
+
+Independent review R1 decided **HOLD — CORRECTION REQUIRED**
+(`docs/gates/S01-I01_CORRECTION_R1.md`). Current main (`ac7e01d`) was merged
+into `build/slice-01` before any edit; the implementation commits were
+preserved. The corrections are as follows.
+
+### B-01 — administrative self-escalation (Critical)
+
+`evaluate_capability` previously accepted an `account.manage` CapabilityGrant as
+satisfying administrative authority. Combined with the service commands, a
+non-admin holding that grant could grant itself any capability — bypassing scope
+and delegable semantics.
+
+The rule is now: an administrative capability is satisfied **only** by a real
+`is_platform_admin` account. A new primitive,
+`require_administrative_authority`, authorizes the mutating commands
+(`grant_capability`, `revoke_capability`, `deactivate_account`) and is likewise
+satisfied only by a real Platform Admin; a deactivated admin cannot mutate.
+
+To avoid a confusing dual meaning, the two uses are kept explicitly apart:
+
+- `evaluate_capability(..., ACCOUNT_MANAGE)` answers *"does this account hold
+  administrative authority?"* — the query/display question.
+- `require_administrative_authority` authorizes an actual mutation.
+
+Both deliberately exclude grant-based administration, because explicit bounded
+delegation is deferred (`docs/AUTHORITY_MODEL.md` §Delegation). Partially
+implementing delegation here is exactly what produced the escalation path.
+
+### B-02 — hashing-safe admin
+
+`AccountAdmin` now extends `UserAdmin` with `AccountCreationForm`
+(`AdminUserCreationForm` — the class `UserAdmin.add_form` expects) and
+`AccountChangeForm` (`UserChangeForm`, whose password field is the read-only
+`ReadOnlyPasswordHashField`). `person` and `is_platform_admin` appear in the
+fieldsets/add_fieldsets. `CapabilityGrantAdmin` makes `granted_by_account` read-only,
+so an existing grant's provenance cannot be rewritten.
+
+Writing the test surfaced a real defect in the first attempt: the add form
+declared only `username`, so the admin add view would have inserted an Account
+with a null `person` and failed at the database. `person` is now declared on the
+creation form.
+
+### B-03 — secret key fails closed
+
+`DJANGO_SECRET_KEY` is read first. If it is present it is used verbatim. If it is
+absent or blank: with `DEBUG` enabled, a clearly labelled development-only
+fallback is used; otherwise settings raise `ImproperlyConfigured` at import,
+before the application can serve a request. The failure message says what to set
+and never echoes a value. CI supplies `DJANGO_SECRET_KEY` with `DJANGO_DEBUG:
+"False"`, so CI exercises the required-key path rather than the fallback.
+
+### B-04 — grant provenance
+
+`granted_by_account` is non-null with `on_delete=PROTECT`. A grant can no longer
+exist without an issuer, and the issuer cannot be deleted while referenced, so
+"actor always known" is enforced by the database and not only by convention.
+Because the schema is still a development-only initial migration with no
+production data, the initial migration was regenerated cleanly rather than
+chained — per the correction prompt's migration discipline. No compatibility
+migration was added.
+
+### B-05 — atomic Person + Account creation
+
+`AccountManager._create_user` writes the automatic Person and the Account inside
+one `transaction.atomic()` block. A failure anywhere in Account creation rolls
+the automatic Person back. A Person supplied by the caller is never saved or
+deleted by this path, because it was not created here.
+
+Note on the shape of the fix: this deliberately uses an explicit atomic block
+rather than `transaction.on_commit`, because in autocommit mode (notably under
+`pytest-django`'s `TestCase`) `on_commit` runs immediately and would have left
+the orphan exactly as before, while still appearing correct.
+
+### B-06 / B-07 / N-01
+
+- B-06: the `license = { text = "Proprietary" }` declaration was removed from
+  `pyproject.toml`. Licensing stays undecided; no other licence was substituted.
+- B-07: `CREATEROLE` was removed from the README. Only `CREATEDB` is granted,
+  which is what pytest-django needs to create its test database, and the note
+  states `CREATEROLE`/`SUPERUSER` are not granted.
+- N-01: the unused, mis-typed `can_manage_accounts` context value and its
+  now-unused import were removed from the dashboard view.
+
+### Regression tests added
+
+| Blocker | Test file | Count |
+|---|---|---|
+| B-01 | `identity/tests/test_administrative_mutations.py` | 16 |
+| B-02 | `identity/tests/test_admin_configuration.py` | 12 |
+| B-03 | `tests/test_settings_secret_key.py` | 11 |
+| B-04 | `identity/tests/test_grant_provenance.py` | 11 |
+| B-05 | `identity/tests/test_account_creation_atomicity.py` | 5 |
+
+Total 55 new tests; the suite grew from 61 to 111.
+
+The B-03 tests run the settings module in a subprocess with a controlled
+environment, so the real import path and the real failure are exercised rather
+than a re-implementation of the rule.
+

@@ -14,6 +14,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -34,8 +36,22 @@ def _env_list(name: str, default: str = "") -> list[str]:
 
 DEBUG = _env_bool("DJANGO_DEBUG", default=False)
 
-# Development-only fallback; production deployments must provide a real key.
-SECRET_KEY = _env("DJANGO_SECRET_KEY", default="insecure-development-key-do-not-use-in-production")
+# --- Secret key -----------------------------------------------------------
+# A missing secret key must never silently fall back to a fixed value outside
+# explicit development: that would make every such deployment share one public
+# signing key. Fail fast instead, with a message that says what to set.
+_DEVELOPMENT_SECRET_KEY = "insecure-development-only-key-not-for-production"
+
+_secret_key = _env("DJANGO_SECRET_KEY").strip()
+if _secret_key:
+    SECRET_KEY = _secret_key
+elif DEBUG:
+    SECRET_KEY = _DEVELOPMENT_SECRET_KEY
+else:
+    raise ImproperlyConfigured(
+        "DJANGO_SECRET_KEY is required when DJANGO_DEBUG is not enabled. "
+        "Set it in the environment (or a local .env) to a long random string."
+    )
 
 ALLOWED_HOSTS = _env_list("DJANGO_ALLOWED_HOSTS", default="localhost,127.0.0.1")
 

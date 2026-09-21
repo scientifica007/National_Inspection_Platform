@@ -69,32 +69,41 @@ def test_person_deletion_is_protected_while_account_exists():
 class TestCapabilityGrantValidity:
     """Requirement 7: revoked/expired grants do not authorize."""
 
-    def _grant(self, account, **kwargs):
+    def _grant(self, account, issuer, **kwargs):
+        # B-04: a grant always records the Account that issued it.
         return CapabilityGrant.objects.create(
-            account=account, capability_code="visit.create", **kwargs
+            account=account,
+            capability_code="visit.create",
+            granted_by_account=issuer,
+            **kwargs,
         )
 
-    def test_unbounded_grant_is_valid(self, inspector_account):
-        grant = self._grant(inspector_account, scope_kind=CapabilityGrant.ScopeKind.OWN)
+    def test_unbounded_grant_is_valid(self, inspector_account, grant_issuer):
+        grant = self._grant(
+            inspector_account, grant_issuer, scope_kind=CapabilityGrant.ScopeKind.OWN
+        )
         assert grant.is_valid_at() is True
         assert grant.is_revoked is False
 
-    def test_expired_grant_is_not_valid(self, inspector_account):
+    def test_expired_grant_is_not_valid(self, inspector_account, grant_issuer):
         now = timezone.now()
         grant = self._grant(
             inspector_account,
+            grant_issuer,
             valid_from=now - timezone.timedelta(days=10),
             valid_until=now - timezone.timedelta(days=1),
         )
         assert grant.is_valid_at() is False
 
-    def test_not_yet_started_grant_is_not_valid(self, inspector_account):
+    def test_not_yet_started_grant_is_not_valid(self, inspector_account, grant_issuer):
         now = timezone.now()
-        grant = self._grant(inspector_account, valid_from=now + timezone.timedelta(days=1))
+        grant = self._grant(
+            inspector_account, grant_issuer, valid_from=now + timezone.timedelta(days=1)
+        )
         assert grant.is_valid_at() is False
 
-    def test_revoked_grant_is_not_valid(self, inspector_account):
-        grant = self._grant(inspector_account, revoked_at=timezone.now())
+    def test_revoked_grant_is_not_valid(self, inspector_account, grant_issuer):
+        grant = self._grant(inspector_account, grant_issuer, revoked_at=timezone.now())
         assert grant.is_revoked is True
         assert grant.is_valid_at() is False
 
@@ -102,23 +111,25 @@ class TestCapabilityGrantValidity:
         """Slice 01 supports OWN and ALL only; no generic scope engine."""
         assert set(CapabilityGrant.ScopeKind.values) == {"OWN", "ALL"}
 
-    def test_invalid_validity_window_is_rejected_by_clean(self, inspector_account):
+    def test_invalid_validity_window_is_rejected_by_clean(self, inspector_account, grant_issuer):
         now = timezone.now()
         grant = CapabilityGrant(
             account=inspector_account,
             capability_code="visit.create",
+            granted_by_account=grant_issuer,
             valid_from=now,
             valid_until=now - timezone.timedelta(days=1),
         )
         with pytest.raises(ValidationError):
             grant.full_clean()
 
-    def test_validity_window_order_is_enforced_by_database(self, inspector_account):
+    def test_validity_window_order_is_enforced_by_database(self, inspector_account, grant_issuer):
         now = timezone.now()
         with pytest.raises(IntegrityError):
             CapabilityGrant.objects.create(
                 account=inspector_account,
                 capability_code="visit.create",
+                granted_by_account=grant_issuer,
                 valid_from=now,
                 valid_until=now - timezone.timedelta(days=1),
             )
