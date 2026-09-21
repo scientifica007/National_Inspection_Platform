@@ -126,3 +126,25 @@ Added:
 - `docs/gates/S01-I01_CORRECTION_R4.md`
 
 S01-I02 remains unauthorized.
+
+
+## 2026-09-21 — S01-I01 R4 Correction Re-review / Residual R4.1
+
+Re-reviewed PR #1 at head `ead4698` after correction cycle R4.
+
+Results:
+- R4-B02: closed.
+- R4-B01: substantially corrected but not fully closed.
+
+Residual:
+- an unsaved Django `Account` may be constructed with an explicit PK copied from a real Platform Admin.
+- because the R4 primitive checks only `pk is not None` before querying that PK, the fabricated unsaved instance can still borrow the real admin's stored authority.
+
+Gate:
+- `HOLD — MINIMAL RESIDUAL CORRECTION REQUIRED (R4.1)`
+
+Added:
+- `docs/OPENHANDS_CORRECTION_PROMPT_S01_I01_R4_1.md`
+- `docs/gates/S01-I01_CORRECTION_R4_1.md`
+
+S01-I02 remains unauthorized.
