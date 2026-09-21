@@ -103,3 +103,26 @@ Added:
 - `docs/gates/S01-I01_CORRECTION_R3.md`
 
 S01-I02 remains unauthorized.
+
+
+## 2026-09-21 — S01-I01 Independent Re-review R4
+
+Re-reviewed PR #1 at head `cd58b81` after correction cycle R3.
+
+R3 blockers R3-B01…R3-B03 were closed. Gate remains:
+- `HOLD — CORRECTION REQUIRED (R4)`
+
+Remaining blocker:
+- R4-B01: `require_administrative_authority` trusts duck-typed/in-memory flags and can accept fabricated or unsaved actors instead of a real persisted Platform Admin.
+
+Documentation cleanup:
+- R4-B02: PR top verification summary still contains stale pre-R3 totals.
+
+Operational security notice:
+- an access-token-like GitHub credential appeared in the supplied execution transcript; it was not found in the repository diff. Treat it as exposed and rotate/revoke if still valid.
+
+Added:
+- `docs/OPENHANDS_CORRECTION_PROMPT_S01_I01_R4.md`
+- `docs/gates/S01-I01_CORRECTION_R4.md`
+
+S01-I02 remains unauthorized.
