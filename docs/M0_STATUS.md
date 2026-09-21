@@ -4,37 +4,49 @@
 
 **M0 — Foundation / Domain Design**
 
-## Completed drafts
+## Completed design work
 
-- Product vision.
+- Product vision draft.
 - Conceptual domain model.
 - Core invariants.
 - Replaceable modular architecture principle.
 - Domain fitness scenarios.
+- Scenario Review 01.
 - Minimal Stable Core.
 - Authority model.
 - Lifecycle semantics.
+- lifecycle profiles for Visit / KnowledgeArtifact / Institution.
 - Initial implementation scope.
 - Vertical Slice 01.
+- concrete data model draft for Vertical Slice 01.
+- module dependency map.
 - Test strategy.
+- proposed initial stack.
 - AI executor readiness gate.
 
-## Still open before handoff
+## Findings from Scenario Review 01
 
-1. Review the Minimal Stable Core against additional real inspection scenarios.
-2. Validate Authority Model details, especially:
-   - Admin power boundaries.
-   - scope hierarchy/composition.
-   - delegation semantics.
-3. Validate lifecycle semantics for Visit, KnowledgeArtifact and Institution separately.
-4. Define the first implementation stack and repository engineering conventions.
-5. Define module dependency map.
-6. Define concrete data model only for Vertical Slice 01.
-7. Convert acceptance criteria into an executor-ready specification.
-8. Perform a final contradiction/over-abstraction review.
+The architecture remains viable. Four refinements were identified:
+
+1. TeamCycle for recurring/seasonal team instances.
+2. explicit Scope intersection semantics.
+3. retention rule for local entities referenced by finalized history.
+4. separation between Admin authority and professional authorship.
+
+The first three have a proposed design. The fourth is an owner-level Domain decision.
+
+## Open before handoff
+
+1. Resolve the decisions in `docs/OPEN_DECISIONS.md`.
+2. Accept/revise ADR-0002 initial stack.
+3. Apply TeamCycle + Scope refinements to the main Domain Model.
+4. Review the concrete Vertical Slice 01 data model for over-modeling and missing constraints.
+5. Convert the accepted slice into an executor specification/prompt.
+6. Run final contradiction/over-abstraction review.
+7. Mark Product Vision/Invariants as accepted rather than draft.
 
 ## Handoff state
 
 **NOT READY**
 
-The repository is substantially more mature conceptually, but an executor should not be asked to build yet.
+The design is approaching executor-ready state, but the remaining decisions affect permissions and implementation shape and should not be guessed by an executor.
