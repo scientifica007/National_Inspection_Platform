@@ -1,7 +1,8 @@
 # ADR-0002 — Initial Implementation Stack
 
-- Status: **Proposed**
+- Status: **Accepted**
 - Date: 2026-09-21
+- Owner approval: 2026-09-21
 
 ## Context
 
@@ -14,13 +15,13 @@ The first implementation must optimize for:
 - easy handoff to coding agents.
 - low operational complexity.
 
-## Proposed stack
+## Decision
 
 ### Backend
 - Python 3.12
 - Django 5.2 LTS
 - PostgreSQL for canonical deployment/database behavior
-- SQLite may be allowed only for lightweight local smoke work if tests also run against PostgreSQL where database behavior matters.
+- SQLite may be used only for lightweight local smoke work if tests also run against PostgreSQL where database behavior matters.
 
 ### Presentation
 - Django Templates for the initial web UI.
@@ -62,15 +63,8 @@ Server-rendering keeps the first implementation smaller, easier to debug, and ea
 - well suited to a modular monolith.
 - lowers implementation and maintenance cost for the expected product shape.
 
-## Why not frontend framework now?
+## Why not a frontend framework now?
 
-React/Vue/etc. would add:
-- build/tooling state.
-- duplicated validation/state concerns.
-- API surface that must be stabilized immediately.
+React/Vue/etc. would add build/tooling and state-management complexity before the UX requires it.
 
-They remain valid future adapters if the UX later justifies them.
-
-## Decision gate
-
-This ADR remains **Proposed** until the owner approves or explicitly allows the architecture review to accept it.
+They remain valid future Presentation Adapters if later UX needs justify them.
