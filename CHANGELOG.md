@@ -29,3 +29,37 @@ State:
 - M0 COMPLETE.
 - Slice 01 READY FOR AI EXECUTOR — CONTROLLED IMPLEMENTATION.
 - next authorized increment: S01-I01 only.
+
+
+## 2026-09-21 — OpenHands Selected for S01-I01
+
+Selected OpenHands Cloud as the controlled executor for the first increment.
+
+Added:
+- `docs/OPENHANDS_EXECUTOR_PROMPT_S01_I01.md`
+- `docs/S01_I01_EXPECTED_OUTPUTS.md`
+
+Execution remains restricted to S01-I01. OpenHands must stop after implementation/testing and may not continue to S01-I02 without an independent review gate PASS.
+
+
+## 2026-09-21 — S01-I01 Independent Review R1
+
+PR #1 was independently reviewed against the current main documentation baseline, actual diff, tests, CI and execution evidence.
+
+Gate:
+- `HOLD — CORRECTION REQUIRED`
+
+Blocking findings:
+- B-01 administrative self-escalation/delegation gap.
+- B-02 unsafe plain ModelAdmin for custom Account.
+- B-03 insecure SECRET_KEY fallback outside explicit debug.
+- B-04 CapabilityGrant provenance can be null/erased.
+- B-05 non-atomic auto Person+Account creation.
+- B-06 unauthorized Proprietary license metadata.
+- B-07 unnecessary PostgreSQL CREATEROLE privilege.
+
+Added:
+- `docs/OPENHANDS_CORRECTION_PROMPT_S01_I01_R1.md`
+- `docs/gates/S01-I01_CORRECTION_R1.md`
+
+S01-I02 remains unauthorized.

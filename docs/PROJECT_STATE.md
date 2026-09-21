@@ -35,22 +35,44 @@ This readiness applies only to:
 
 It does not authorize broad implementation of the complete national platform.
 
+## Current implementation gate
+
+**S01-I01 — HOLD — CORRECTION REQUIRED**
+
+Independent review of PR #1 found blocking findings B-01 through B-07.
+
+Correction record:
+`docs/gates/S01-I01_CORRECTION_R1.md`
+
+Authorized correction prompt:
+`docs/OPENHANDS_CORRECTION_PROMPT_S01_I01_R1.md`
+
 ## Next authorized action
 
-Create/use implementation branch:
+Continue on implementation branch:
 
 `build/slice-01`
 
-Then execute only:
+Execute a **correction-only pass for S01-I01**.
 
-**S01-I01 — Project Skeleton + Identity/Authority Foundation**
+S01-I02 remains unauthorized.
 
-After implementation:
-- verify.
-- independently review using `AI_REVIEWER_PROMPT_01.md`.
-- correct blocking findings.
-- reverify.
-- record checkpoint.
+Selected executor for this increment:
+**OpenHands Cloud (free option), under controlled execution constraints.**
+
+OpenHands-specific prompt:
+`docs/OPENHANDS_EXECUTOR_PROMPT_S01_I01.md`
+
+Expected outputs:
+`docs/S01_I01_EXPECTED_OUTPUTS.md`
+
+After correction:
+- rerun verification.
+- push corrections to PR #1.
+- stop with `HOLD — RE-REVIEW REQUIRED`.
+- independently re-review.
+- correct further if needed.
+- record checkpoint only after PASS.
 
 No S01-I02 work starts before S01-I01 is explicitly marked:
 
