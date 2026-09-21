@@ -45,6 +45,15 @@ Then execute only:
 
 **S01-I01 — Project Skeleton + Identity/Authority Foundation**
 
+Selected executor for this increment:
+**OpenHands Cloud (free option), under controlled execution constraints.**
+
+OpenHands-specific prompt:
+`docs/OPENHANDS_EXECUTOR_PROMPT_S01_I01.md`
+
+Expected outputs:
+`docs/S01_I01_EXPECTED_OUTPUTS.md`
+
 After implementation:
 - verify.
 - independently review using `AI_REVIEWER_PROMPT_01.md`.
