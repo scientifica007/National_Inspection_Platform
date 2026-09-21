@@ -10,7 +10,11 @@ Create and work only on branch:
 
 Your job is to implement **Vertical Slice 01 — Solo Inspector Field Visit** and nothing beyond that scope.
 
-Before writing code, read all current repository documentation, especially:
+Before writing code, start with:
+- `docs/DOCUMENTATION_INDEX.md`
+- `docs/PROJECT_STATE.md`
+
+Then read all current repository documentation required by that index, especially:
 
 - `docs/INVARIANTS.md`
 - `docs/PRODUCT_VISION.md`
@@ -21,6 +25,8 @@ Before writing code, read all current repository documentation, especially:
 - `docs/VERTICAL_SLICE_01.md`
 - `docs/VERTICAL_SLICE_01_DATA_MODEL.md`
 - `docs/ENGINEERING_CONVENTIONS.md`
+- `docs/SECURITY_AND_DATA_GOVERNANCE.md`
+- `docs/REPOSITORY_GOVERNANCE.md`
 - `docs/AI_EXECUTOR_SPEC_01.md`
 - accepted ADRs in `decisions/`
 
@@ -69,7 +75,7 @@ Start with **S01-I01 only**.
 After each increment:
 - run its automated checks.
 - provide the exact commit and test evidence.
-- stop for an independent review pass.
+- stop for an independent review pass using `docs/AI_REVIEWER_PROMPT_01.md`.
 - fix all blocking findings.
 - rerun checks.
 - continue only after the increment checkpoint is marked `PASS — NEXT INCREMENT ALLOWED`.
