@@ -13,8 +13,7 @@ from django.core.exceptions import ValidationError
 
 from identity.forms import AccountChangeForm, AccountCreationForm
 from identity.models import Account
-from identity.services import create_person
-from identity.tests.factories import make_account
+from identity.tests.factories import make_account, make_person
 
 pytestmark = pytest.mark.django_db
 
@@ -27,7 +26,7 @@ class TestPersonRemainsSelectableAtCreation:
         assert AccountCreationForm().fields["person"].disabled is False
 
     def test_creation_can_bind_an_explicit_person(self):
-        person = create_person(display_name="شخص عند الإنشاء (بيانات اختبار)")
+        person = make_person(display_name="شخص عند الإنشاء (بيانات اختبار)")
         form = AccountCreationForm(
             data={
                 "username": "created-with-person",
@@ -43,7 +42,7 @@ class TestPersonRemainsSelectableAtCreation:
 class TestModelRefusesRebinding:
     def test_reassigning_person_on_save_is_rejected(self):
         account = make_account(username="rebind-target")
-        other = create_person(display_name="شخص آخر (بيانات اختبار)")
+        other = make_person(display_name="شخص آخر (بيانات اختبار)")
         account.person = other
         with pytest.raises(ValidationError) as excinfo:
             account.save()
@@ -52,7 +51,7 @@ class TestModelRefusesRebinding:
     def test_rejected_rebind_leaves_the_stored_binding_intact(self):
         account = make_account(username="rebind-target-2")
         original_person_id = account.person_id
-        other = create_person(display_name="شخص آخر ٢ (بيانات اختبار)")
+        other = make_person(display_name="شخص آخر ٢ (بيانات اختبار)")
         account.person = other
         with pytest.raises(ValidationError):
             account.save()
@@ -61,7 +60,7 @@ class TestModelRefusesRebinding:
     def test_rebinding_via_direct_person_id_assignment_is_rejected(self):
         """The check reads the stored value, so it cannot be bypassed by a raw id."""
         account = make_account(username="rebind-target-3")
-        other = create_person(display_name="شخص آخر ٣ (بيانات اختبار)")
+        other = make_person(display_name="شخص آخر ٣ (بيانات اختبار)")
         account.person_id = other.pk
         with pytest.raises(ValidationError):
             account.save()
@@ -73,7 +72,7 @@ class TestModelRefusesRebinding:
         it: the supported paths are ``save()`` and the admin/application forms.
         """
         account = make_account(username="rebind-target-4")
-        other = create_person(display_name="شخص آخر ٤ (بيانات اختبار)")
+        other = make_person(display_name="شخص آخر ٤ (بيانات اختبار)")
         Account.objects.filter(pk=account.pk).update(person=other)
         assert Account.objects.get(pk=account.pk).person_id == other.pk
 
@@ -100,7 +99,7 @@ class TestChangeFormFreezesThePersonField:
 
     def test_change_form_frozen_field_cannot_move_the_binding(self, inspector_account):
         """Even a forged POST value cannot move the binding through the form."""
-        other = create_person(display_name="شخص مُدس (بيانات اختبار)")
+        other = make_person(display_name="شخص مُدس (بيانات اختبار)")
         form = AccountChangeForm(
             data={
                 "username": inspector_account.username,

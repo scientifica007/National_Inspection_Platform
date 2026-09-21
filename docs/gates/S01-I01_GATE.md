@@ -76,14 +76,14 @@ AI features, generic workflow/rule engines, microservices.
 | Python | `.venv/bin/python --version` | Python 3.12.14 |
 | Django | `python -c "import django; print(django.get_version())"` | Django 5.2.17 |
 | Ruff lint | `ruff check .` | All checks passed |
-| Ruff format | `ruff format --check .` | 94 files already formatted |
+| Ruff format | `ruff format --check .` | 102 files already formatted |
 | Django check | `python manage.py check` | no issues (0 silenced) |
 | Migration check | `python manage.py makemigrations --check --dry-run` | No changes detected |
 | Migrations applied | `python manage.py showmigrations identity` | `[X] 0001_initial` |
 | Fresh DB migration path | `POSTGRES_DB=<fresh> python manage.py migrate` | all migrations applied OK |
-| Tests | `pytest -q` | 162 passed |
+| Tests | `pytest -q` | 199 passed |
 | PostgreSQL | `connection.vendor` | `postgresql` (PostgreSQL 17.11) |
-| CI | GitHub Actions run on correction head | pass |
+| CI | GitHub Actions run on the pushed head | see PR #1 |
 
 Verified separately that `git status` is clean, `.env` is git-ignored and
 unstaged, and no `db.sqlite3`, dump or token file exists in the tree.
@@ -91,9 +91,10 @@ unstaged, and no `db.sqlite3`, dump or token file exists in the tree.
 ## Environmental Limitations
 - None blocking. A local PostgreSQL 17.11 server was available, so the
   PostgreSQL test path was fully exercised rather than waived.
-- The execution container was recycled twice during the correction pass; the
-  PostgreSQL server and virtualenv were reinstalled and the suite re-run, so the
-  evidence above reflects a completed run, not a cached one.
+- The execution container was recycled during each correction pass (the
+  PostgreSQL server, the uv-managed Python 3.12 and the virtualenv were
+  reinstalled and the suite re-run). The evidence above reflects a completed
+  run on the final tree, not a cached one.
 
 
 ## Review Findings
@@ -149,16 +150,41 @@ findings were confirmed closed; five further blockers were raised and corrected.
 - N-02 (still deferred, as instructed): the Platform Admin product UI remains
   read-only.
 
+## Corrections — Cycle R3
+
+Correction cycle R3: `R3-B01` … `R3-B03` corrected. See
+`docs/gates/S01-I01_CORRECTION_R3.md` and
+`docs/IMPLEMENTATION_NOTES_S01_I01.md` §12 for the implementation detail.
+
+### Blocking — Correction Cycle R3
+
+Independent re-review R3 decided **HOLD — CORRECTION REQUIRED (R3)**. The R2
+findings were confirmed closed; three further blockers were raised and
+corrected.
+
+| ID | Severity | Status | Correction |
+|---|---|---|---|
+| R3-B01 | High | corrected | `identity.bootstrap.bootstrap_platform_admin` saved the Person *before* creating the Account, so a later Account failure (a duplicate username, for example) left an orphan Person. It now delegates Person creation to `AccountManager`, which already writes the automatic Person and the Account in one atomic block (the R2-B05 mechanism), and wraps the call in `transaction.atomic()`. A refused bootstrap now leaves the Person count unchanged with no unreachable Person. |
+| R3-B02 | High | corrected | `identity.services.create_person` was an application identity mutation with no actor. It now requires an active real Platform Admin actor through the same `require_administrative_authority` primitive, so a non-admin (including one holding an `account.manage` grant) and an inactive Platform Admin are both denied. No new capability or delegation surface was added. Tests that need a Person as *data* now use the test-only `make_person` factory instead of misusing the gated product service. |
+| R3-B03 | Medium | corrected | The README pointed operators at `createsuperuser`, which creates a Django *technical* superuser — a deliberately separate layer from the application Platform Admin. The README now explains the distinction in a table and documents an operator-controlled first-Platform-Admin bootstrap. A management command `identity.management.commands.bootstrap_platform_admin` provides a reproducible procedure that stays inside the technical/deployment boundary: no HTTP route, no template, and the password is read from an environment variable only, never stored in source. |
+
+### Non-blocking (R3)
+- The raw `QuerySet.update()` Person-binding bypass remains explicitly
+  unsupported, as accepted in R2.
+- The product Platform Admin management UI remains deferred.
+- `AuditEvent` coverage remains deferred to the audit increment.
+
 ## Re-verification
-- [x] all blocking findings resolved (R1 and R2)
-- [x] regression tests added (110 total across both cycles)
-- [x] relevant checks pass (162 tests, Ruff, Django check, migration check, fresh-DB migration path, CI)
+- [x] all blocking findings resolved (R1, R2 and R3)
+- [x] regression tests added (110 across R1/R2; 37 added in R3)
+- [x] relevant checks pass (199 tests, Ruff, Django check, migration check, fresh-DB migration path, CI)
+- [x] new R3 tests confirmed to fail against the pre-correction implementation
 
 ## Checkpoint Decision
 
 `HOLD — RE-REVIEW REQUIRED`
 
-Correction cycle R2 is complete: the five blocking findings were corrected and
+Correction cycle R3 is complete: the three blocking findings were corrected and
 regression-tested, and the full suite passes against PostgreSQL with CI green.
 This record does **not** claim PASS. Closing each blocker, and any subsequent
 `PASS — NEXT INCREMENT ALLOWED`, is reserved for the independent reviewer or

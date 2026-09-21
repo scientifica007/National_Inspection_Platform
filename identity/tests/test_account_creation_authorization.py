@@ -102,7 +102,7 @@ class TestActivePlatformAdminCanCreateAccounts:
         assert account.check_password("synthetic-login-check-pass") is True
 
     def test_created_account_binds_the_explicitly_supplied_person(self, grant_issuer):
-        person = create_person(display_name="شخص صريح (بيانات اختبار)")
+        person = create_person(actor=grant_issuer, display_name="شخص صريح (بيانات اختبار)")
         account = create_account(
             actor=grant_issuer,
             username="bound-account",

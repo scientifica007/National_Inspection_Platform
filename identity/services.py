@@ -21,8 +21,21 @@ from .permissions import (
 )
 
 
-def create_person(*, display_name: str) -> Person:
-    """Create a Person (the human being), independent of any Account."""
+def create_person(*, actor: Account, display_name: str) -> Person:
+    """Create a Person (the human being), independent of any Account.
+
+    Creating a Person is an identity mutation, so it requires an active real
+    Platform Admin actor (R3-B02). This is the same narrow rule the other
+    administrative commands use; no delegation is implied, and an
+    ``account.manage`` grant does not satisfy it.
+
+    A caller that only needs a Person as *data* (a fixture, a seed script)
+    should build one directly or reuse ``Account.objects.create_user``, which
+    creates the Person automatically. This service exists for the authorized
+    product case of registering a human before/independently of their Account.
+    """
+    require_administrative_authority(actor, action="create_person")
+
     person = Person(display_name=display_name)
     person.full_clean()
     person.save()

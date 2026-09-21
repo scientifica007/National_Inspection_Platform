@@ -43,9 +43,36 @@ sudo -u postgres psql -c "CREATE DATABASE national_inspection OWNER national_ins
 
 # 4) الترحيلات والتشغيل
 python manage.py migrate
-python manage.py createsuperuser   # سينشئ حسابًا وشخصًا مرتبطًا به
 python manage.py runserver
 ```
+
+### إنشاء أول Platform Admin
+
+هناك مسؤولان مختلفان تمامًا في هذا المشروع:
+
+| | Django superuser | Platform Admin |
+|---|---|---|
+| الطبقة | تقنية (Django) | تطبيقية (سلطة إدارية) |
+| الحقل | `is_superuser` / `is_staff` | `is_platform_admin` |
+| يمنح | الوصول إلى `/admin/` التقني | العمليات الإدارية داخل التطبيق |
+| لا يمنح | أي تأليف مهني | الوصول التقني إلى `/admin/` |
+
+**لا شيء منهما يمنح تأليفًا مهنيًا.** الصفة المهنية تُمنح فقط عبر
+`CapabilityGrant` صريح.
+
+`createsuperuser` ينشئ Django superuser (وهو مفيد لإدارة `/admin/`)، لكنه لا
+ينشئ Platform Admin تطبيقيًا. لإنشاء أول Platform Admin استخدم الأمر التقني:
+
+```bash
+# عيّن كلمة المرور في متغيّر بيئة، ثم شغّل الأمر، ثم أزل المتغيّر.
+export NIP_BOOTSTRAP_PASSWORD='ضع-كلمة-مرور-قوية-هنا'
+python manage.py bootstrap_platform_admin --username admin --display-name "المدير الأول"
+unset NIP_BOOTSTRAP_PASSWORD
+```
+
+هذا الأمر جزء من حدود النشر التقنية: لا يوجد له مسار HTTP ولا قالب، وكلمة
+المرور تُقرأ من متغيّر بيئة فقط ولا تُخزَّن في المستودع. وهو ينشئ الحساب والشخص
+المرتبط به داخل معاملة واحدة، ولا يمنح أي صلاحية مهنية.
 
 الفحوصات:
 

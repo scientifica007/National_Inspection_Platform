@@ -10,8 +10,8 @@ import pytest
 
 from identity.models import CapabilityGrant
 from identity.permissions import Capability
-from identity.services import create_person, grant_capability
-from identity.tests.factories import make_account
+from identity.services import grant_capability
+from identity.tests.factories import make_account, make_person
 
 
 @pytest.fixture
@@ -49,4 +49,4 @@ def inspector_account(db, grant_issuer):
 @pytest.fixture
 def other_person(db):
     """A second, unrelated Person for scope-mismatch tests."""
-    return create_person(display_name="شخص آخر (بيانات اختبار)")
+    return make_person(display_name="شخص آخر (بيانات اختبار)")

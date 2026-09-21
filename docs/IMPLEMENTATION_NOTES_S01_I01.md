@@ -304,3 +304,129 @@ The suite grew from 111 to 162 tests.
 The gate remains **HOLD — RE-REVIEW REQUIRED**. This executor does not
 self-declare PASS; that outcome belongs to the independent reviewer.
 
+## 12. Correction Cycle R3 (R3-B01 … R3-B03)
+
+Third correction-only pass, on the same `build/slice-01` branch. No S01-I02 work
+was started and no product surface was added.
+
+### R3-B01 — bootstrap is atomic and reuses the manager path
+
+`identity.bootstrap.bootstrap_platform_admin` previously constructed and saved
+the Person itself, then created the Account:
+
+```python
+person = Person(display_name=display_name or username)
+person.full_clean()
+person.save()                       # committed here
+return Account.objects.create_user(person=person, ...)
+```
+
+If Account creation failed — a duplicate `username` is the easy case — the
+Person row survived, unreachable from any Account. The fix removes the
+duplicated creation instead of adding a compensating delete:
+
+```python
+with transaction.atomic():
+    return Account.objects.create_user(
+        username=username,
+        email=email,
+        password=password,
+        display_name=display_name or username,
+        is_platform_admin=True,
+    )
+```
+
+`AccountManager._create_user` detects the absent `person` and creates one inside
+its own atomic block together with the Account (the R2-B05 mechanism). The
+bootstrap therefore inherits an already-tested atomicity path rather than
+re-implementing it, and the outer `transaction.atomic()` makes the operation
+safe when a caller has not started one. The manager's deliberate contract is
+preserved: a Person supplied by the caller is never saved or deleted by the
+manager.
+
+Bootstrap still creates `is_platform_admin=True` and still grants no
+professional capability.
+
+### R3-B02 — standalone Person creation is authorized
+
+`identity.services.create_person` took only `display_name`. It is an identity
+mutation, so it now requires an actor and applies the same narrow rule as the
+other administrative commands:
+
+```python
+def create_person(*, actor: Account, display_name: str) -> Person:
+    require_administrative_authority(actor, action="create_person")
+```
+
+`require_administrative_authority` is satisfied only by an active real Platform
+Admin in S01-I01, so a non-admin — including an Account holding an
+`account.manage` grant — and an inactive Platform Admin are both denied. No new
+capability was added, no delegation intake was introduced, and
+`ALL_CAPABILITIES` is unchanged.
+
+The command was retained rather than removed because the authorized use case is
+real: registering a human being before or independently of their Account. What
+changed is that fixtures no longer misuse it. Tests that need a Person merely as
+data call the test-only `identity.tests.factories.make_person`, which is
+documented as a setup bypass in the same spirit as `make_account`. One existing
+test that genuinely exercised the binding path now passes its admin actor
+explicitly, so it drives the real gated service.
+
+### R3-B03 — first Platform Admin bootstrap documented and reproducible
+
+The README instructed operators to run `createsuperuser`. That creates a Django
+*technical* superuser, which this project deliberately keeps distinct from the
+application Platform Admin: `is_superuser`/`is_staff` are not wired to
+`is_platform_admin`, so a superuser is not an application administrator, and a
+Platform Admin has no `/admin/` access by virtue of that flag. Neither grants
+professional authorship.
+
+The README now documents the distinction in a table and gives an
+operator-controlled procedure. A management command supplies the reproducible
+step:
+
+```bash
+export NIP_BOOTSTRAP_PASSWORD='...'
+python manage.py bootstrap_platform_admin --username admin --display-name "المدير الأول"
+unset NIP_BOOTSTRAP_PASSWORD
+```
+
+`identity/management/commands/bootstrap_platform_admin.py` stays inside the
+technical/deployment boundary:
+
+- no HTTP route and no template reach it;
+- it calls `identity.bootstrap.bootstrap_platform_admin`, the same atomic path
+  as R3-B01, inside `transaction.atomic()`;
+- the password is read only from an environment variable — it is never a
+  command-line option, because that would leak into shell history and `ps`, and
+  it is never written to source or committed;
+- it refuses to run when the environment variable is unset or the username
+  already exists, with the collision leaving no orphan Person.
+
+`identity/services.py` does not import the bootstrap module and the bootstrap
+module does not import `services`, so the service's authorization cannot be
+weakened by the bootstrap bypass. A test asserts that import direction
+structurally rather than by string match.
+
+### Regression tests added (R3)
+
+| Blocker | Test file | Count |
+|---|---|---|
+| R3-B01 | `identity/tests/test_bootstrap_atomicity.py` | 12 |
+| R3-B02 | `identity/tests/test_person_creation_authorization.py` | 12 |
+| R3-B03 | `identity/tests/test_bootstrap_management_command.py` | 13 |
+
+The suite grew from 162 to 199 tests.
+
+The R3-B01 tests were confirmed to detect the original defect: restoring the
+pre-correction bootstrap made four of them fail (duplicate-username Person
+count, orphan-Person absence, and the two structural checks that assert the
+manager path is reused). The tests are therefore real regression tests, not
+restatements of the current code.
+
+### Gate
+
+The gate remains **HOLD — RE-REVIEW REQUIRED**. Neither this pass nor any
+previous one claims PASS; closing the findings and any `PASS — NEXT INCREMENT
+ALLOWED` belong to the independent reviewer.
+

@@ -14,9 +14,9 @@ that *do* exercise the authorization go through the service explicitly.
 
 from __future__ import annotations
 
-from identity.models import Account
+from identity.models import Account, Person
 
-__all__ = ["make_account"]
+__all__ = ["make_account", "make_person"]
 
 
 def make_account(
@@ -33,3 +33,16 @@ def make_account(
         display_name=display_name,
         is_platform_admin=is_platform_admin,
     )
+
+
+def make_person(*, display_name: str) -> Person:
+    """Create a synthetic Person directly via the ORM (test setup only).
+
+    The application path ``identity.services.create_person`` is an authorized
+    mutation since R3-B02; tests that need a Person merely as data use this
+    instead of pretending to be an admin.
+    """
+    person = Person(display_name=display_name)
+    person.full_clean()
+    person.save()
+    return person
