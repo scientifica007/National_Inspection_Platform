@@ -1,39 +1,31 @@
-# Open Decisions Before AI Executor Handoff
+# Decisions Before AI Executor Handoff
 
-Only decisions that materially affect implementation belong here.
+All previously open owner-level decisions for the first implementation have now been resolved.
 
 ## OD-001 — Admin vs Professional Authorship
 
-### Question
-Does an account with Admin authority, **only because it is Admin**, have the right to author/finalize professional inspection findings?
+### Decision
+**ACCEPTED — Admin authority does not itself grant professional authorship.**
 
-### Recommended decision
-**No.**
+Admin has the broadest administrative authority inside the application, but authoring/finalizing professional inspection findings requires an appropriate professional capability/position attached to the same real person.
 
-Admin should have the broadest administrative authority inside the application, but professional authorship should require a professional capability/position attached to the same real person.
-
-Therefore one person may be both:
+One person may therefore be both:
 - Admin for platform administration, and
 - Inspector/Minister/etc. for professional acts.
 
-The same person can then perform both kinds of actions, but each action keeps its true actor/context.
+Every action keeps its true actor and context.
 
-### Reason
-This preserves:
-- professional independence.
-- provenance.
-- non-impersonation.
-- clear audit semantics.
+Admin can create and manage missions, users, permissions, scopes, configuration and workflows, and can see application data according to the platform-wide administrative policy. Admin may not impersonate another professional or rewrite that person's finalized professional record.
 
-Admin can still create missions, manage users, configure scopes, see all permitted data, and manage workflows.
-
-**Status: OPEN — owner approval required.**
+**Approved by owner: 2026-09-21.**
 
 ---
 
 ## OD-002 — Initial Technical Stack
 
-### Proposed
+### Decision
+**ACCEPTED.**
+
 - Python 3.12
 - Django 5.2 LTS
 - PostgreSQL
@@ -46,34 +38,34 @@ Admin can still create missions, manage users, configure scopes, see all permitt
 - Ruff
 - CI on PRs
 
-### Reason
-Lowest useful complexity while keeping frontend replaceable and backend modular.
-
-**Status: OPEN — owner approval required.**
+**Approved by owner: 2026-09-21.**
 
 ---
 
 ## OD-003 — Amendment availability before production
 
-Vertical Slice 01 proves immutability but does not yet expose Amendment UI.
+### Decision
+**ACCEPTED.**
 
-### Recommended decision
-No production/pilot with real official records until correction-by-amendment exists.
+Development and human acceptance with test data may proceed before Amendment UI exists.
 
-Development/human acceptance with test data can proceed without it, provided finalization warns that the test record is immutable.
+No production/pilot using real official finalized records may begin until correction-by-amendment/addendum is implemented and tested.
 
-**Status: RECOMMENDED — confirm before production planning.**
+**Approved by owner: 2026-09-21.**
 
 ---
 
 ## OD-004 — First Slice breadth
 
-### Proposed
-The first executor builds only the Solo Inspector Field Visit slice.
+### Decision
+**ACCEPTED.**
 
-Teams/Missions/Assignments stay deferred even though they are central to the final product.
+The first executor builds only **Solo Inspector Field Visit**.
 
-### Reason
-This verifies the architecture with the smallest meaningful end-to-end product before adding organizational complexity.
+Teams, Missions and Assignments remain architecturally planned but implementation-deferred.
 
-**Status: OPEN — owner approval required.**
+**Approved by owner: 2026-09-21.**
+
+## Result
+
+There are no owner-level open decisions blocking implementation of Vertical Slice 01.
