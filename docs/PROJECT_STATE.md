@@ -37,15 +37,15 @@ It does not authorize broad implementation of the complete national platform.
 
 ## Current implementation gate
 
-**S01-I01 — HOLD — CORRECTION REQUIRED**
+**S01-I01 — HOLD — CORRECTION REQUIRED (R2)**
 
-Independent review of PR #1 found blocking findings B-01 through B-07.
+Independent re-review of PR #1 confirmed the R1 fixes but found residual/new blocking findings R2-B01 through R2-B05.
 
-Correction record:
-`docs/gates/S01-I01_CORRECTION_R1.md`
+Active correction record:
+`docs/gates/S01-I01_CORRECTION_R2.md`
 
 Authorized correction prompt:
-`docs/OPENHANDS_CORRECTION_PROMPT_S01_I01_R1.md`
+`docs/OPENHANDS_CORRECTION_PROMPT_S01_I01_R2.md`
 
 ## Next authorized action
 
@@ -53,7 +53,7 @@ Continue on implementation branch:
 
 `build/slice-01`
 
-Execute a **correction-only pass for S01-I01**.
+Execute the **R2 correction-only pass for S01-I01**.
 
 S01-I02 remains unauthorized.
 

@@ -53,7 +53,8 @@ If a true conflict remains after applying this order, implementation must stop a
 
 - `CONTROLLED_IMPLEMENTATION_CYCLE.md` — implement → verify → review → correct → reverify.
 - `INCREMENT_GATE_TEMPLATE.md` — mandatory increment gate.
-- `gates/S01-I01_CORRECTION_R1.md` — active correction record for S01-I01 review cycle 1.
+- `gates/S01-I01_CORRECTION_R1.md` — correction record for S01-I01 review cycle 1.
+- `gates/S01-I01_CORRECTION_R2.md` — active correction record for S01-I01 review cycle 2.
 - `CHECKPOINT_RECORD_TEMPLATE.md` — persisted checkpoint evidence.
 - `CORRECTION_CYCLE_TEMPLATE.md` — correction/re-verification record.
 - `SLICE_01_INCREMENT_PLAN.md` — increments S01-I01 … S01-I07.
@@ -71,6 +72,7 @@ If a true conflict remains after applying this order, implementation must stop a
 - `AI_EXECUTOR_PROMPT_01.md` — generic executor prompt.
 - `OPENHANDS_EXECUTOR_PROMPT_S01_I01.md` — OpenHands-specific prompt for initial S01-I01 implementation.
 - `OPENHANDS_CORRECTION_PROMPT_S01_I01_R1.md` — correction-only OpenHands prompt after independent review R1.
+- `OPENHANDS_CORRECTION_PROMPT_S01_I01_R2.md` — correction-only OpenHands prompt after independent re-review R2.
 - `S01_I01_EXPECTED_OUTPUTS.md` — precise expected outputs/non-outputs for S01-I01.
 - `AI_REVIEWER_PROMPT_01.md` — independent reviewer/auditor prompt.
 

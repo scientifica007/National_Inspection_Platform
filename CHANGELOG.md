@@ -63,3 +63,24 @@ Added:
 - `docs/gates/S01-I01_CORRECTION_R1.md`
 
 S01-I02 remains unauthorized.
+
+
+## 2026-09-21 — S01-I01 Independent Re-review R2
+
+Re-reviewed PR #1 at head `0485d8c` after correction cycle R1.
+
+R1 blockers B-01…B-07 were substantially closed, but the gate remains:
+- `HOLD — CORRECTION REQUIRED (R2)`
+
+New/residual blockers:
+- R2-B01: ungated `create_account` application service can mint Platform Admins.
+- R2-B02: Account→Person binding remains mutable through Django Admin.
+- R2-B03: CapabilityGrant technical admin exposes invalid/bypass-prone mutation surface.
+- R2-B04: grant recipient Account deletion can CASCADE away CapabilityGrant history.
+- R2-B05: stale implementation/PR documentation after R1 sync.
+
+Added:
+- `docs/OPENHANDS_CORRECTION_PROMPT_S01_I01_R2.md`
+- `docs/gates/S01-I01_CORRECTION_R2.md`
+
+S01-I02 remains unauthorized.
