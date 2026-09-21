@@ -79,6 +79,18 @@ class AccountAdmin(UserAdmin):
 
 @admin.register(CapabilityGrant)
 class CapabilityGrantAdmin(admin.ModelAdmin):
+    """Read-only inspection of grants in the technical admin.
+
+    Grants are not managed here (R2-B03). The technical admin previously
+    exposed an add/change/delete surface that either could not satisfy the
+    required issuer or would bypass the service semantics in
+    ``identity.services`` — grant/revoke must record the real acting admin and
+    revocation must preserve history rather than delete it.
+
+    For S01-I01 the admin is therefore inspection-only: list and detail. No
+    grant-management product UI is introduced.
+    """
+
     list_display = (
         "capability_code",
         "scope_kind",
@@ -91,6 +103,25 @@ class CapabilityGrantAdmin(admin.ModelAdmin):
     )
     list_filter = ("scope_kind", "capability_code", "delegable")
     search_fields = ("capability_code", "account__username")
-    autocomplete_fields = ("account", "granted_by_account")
-    # Provenance is immutable: an existing grant's issuer must not be rewritten.
-    readonly_fields = ("granted_by_account",)
+    # Every field is inspection-only; nothing about a grant is editable here.
+    readonly_fields = (
+        "id",
+        "account",
+        "capability_code",
+        "scope_kind",
+        "valid_from",
+        "valid_until",
+        "delegable",
+        "granted_by_account",
+        "revoked_at",
+        "created_at",
+    )
+
+    def has_add_permission(self, request) -> bool:
+        return False
+
+    def has_change_permission(self, request, obj=None) -> bool:
+        return False
+
+    def has_delete_permission(self, request, obj=None) -> bool:
+        return False

@@ -106,6 +106,31 @@ class Account(AbstractUser):
     def __str__(self) -> str:
         return self.username
 
+    def save(self, *args, **kwargs):
+        """Persist the Account, refusing to rebind an existing one to another Person.
+
+        The Person may be chosen when the Account is created, but an existing
+        Account must not be routinely rebound (R2-B02). Enforcing this here
+        rather than only in a form means no path can rebind — Django Admin, a
+        form, a shell session or a future caller.
+
+        The check reads the stored value, so it cannot be bypassed by
+        constructing an instance with a different ``person_id``. One extra
+        query on update is a deliberate trade for that guarantee.
+        """
+        if self.pk is not None:
+            stored_person_id = (
+                Account.objects.filter(pk=self.pk).values_list("person_id", flat=True).first()
+            )
+            if stored_person_id is not None and stored_person_id != self.person_id:
+                raise ValidationError(
+                    {
+                        "person": "لا يمكن إعادة ربط حساب قائم بشخص آخر. "
+                        "أنشئ حسابًا جديدًا للشخص الجديد."
+                    }
+                )
+        return super().save(*args, **kwargs)
+
 
 class CapabilityGrant(models.Model):
     """A time-bounded authorisation of a Capability on a Scope.
@@ -124,7 +149,11 @@ class CapabilityGrant(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     account = models.ForeignKey(
         Account,
-        on_delete=models.CASCADE,
+        # History-preserving (R2-B04): a recipient Account that has grant
+        # history cannot be deleted, so authorisation records are never
+        # silently cascaded away. Account deactivation is the normal
+        # lifecycle operation. Same reasoning as ``granted_by_account``.
+        on_delete=models.PROTECT,
         related_name="capability_grants",
         verbose_name="الحساب",
     )

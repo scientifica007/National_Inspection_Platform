@@ -10,7 +10,7 @@ from django.test import Client
 from django.urls import reverse
 
 from identity.models import Account, Person
-from identity.services import create_account
+from identity.tests.factories import make_account
 
 pytestmark = pytest.mark.django_db
 
@@ -22,7 +22,7 @@ def password():
 
 @pytest.fixture
 def active_account(password):
-    return create_account(
+    return make_account(
         username="login-user",
         password=password,
         display_name="مستخدم الدخول (بيانات اختبار)",

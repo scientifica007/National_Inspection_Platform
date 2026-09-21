@@ -21,11 +21,11 @@ from identity.permissions import (
     require_administrative_authority,
 )
 from identity.services import (
-    create_account,
     deactivate_account,
     grant_capability,
     revoke_capability,
 )
+from identity.tests.factories import make_account
 
 pytestmark = pytest.mark.django_db
 
@@ -37,9 +37,8 @@ def non_admin_with_account_manage(grant_issuer):
     Seeding the grant directly (rather than through the service) models the
     escalation attempt at its strongest: the row exists in the database.
     """
-    account = create_account(
+    account = make_account(
         username="pseudo-admin",
-        password="synthetic-pseudo-admin-pass",
         display_name="مسؤول غير حقيقي (بيانات اختبار)",
     )
     CapabilityGrant.objects.create(
@@ -53,9 +52,8 @@ def non_admin_with_account_manage(grant_issuer):
 
 @pytest.fixture
 def victim_account(db):
-    return create_account(
+    return make_account(
         username="target-account",
-        password="synthetic-target-pass",
         display_name="حساب مستهدف (بيانات اختبار)",
     )
 

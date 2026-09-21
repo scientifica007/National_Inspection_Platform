@@ -50,8 +50,20 @@ class AccountChangeForm(UserChangeForm):
 
     Django's change form renders the password as a read-only
     "change password" link, never as an editable raw text field.
+
+    The Person binding is frozen here as well as in ``Account.save`` (R2-B02):
+    an existing Account must not be routinely rebound to another Person. The
+    field stays visible so the binding is legible, but it is not editable.
     """
 
     class Meta(UserChangeForm.Meta):
         model = Account
         fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance is not None and self.instance.pk is not None:
+            self.fields["person"].disabled = True
+            self.fields[
+                "person"
+            ].help_text = "ارتباط الحساب بالشخص ثابت بعد الإنشاء. أنشئ حسابًا جديدًا لتغييره."

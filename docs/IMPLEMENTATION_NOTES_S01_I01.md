@@ -70,8 +70,10 @@ tests assert this absence structurally (no impersonation symbol in
 `identity/services.py` holds commands (`create_person`, `create_account`,
 `grant_capability`, `revoke_capability`, `deactivate_account`) and owns
 transaction boundaries. `identity/selectors.py` holds read-only queries.
-Administrative commands require `account.manage` through the same primitives,
-so an inspector cannot escalate by granting themselves capabilities.
+Administrative commands require the primitives in `identity.permissions` —
+specifically a real, active Platform Admin — so an inspector cannot escalate by
+granting themselves capabilities. Since R2-B01 this includes `create_account`:
+application account creation is an authorized mutation, not an open helper.
 
 Revocation sets `revoked_at` instead of deleting the row, preserving grant
 history.
@@ -101,9 +103,9 @@ layer outside the functional hierarchy (`docs/AUTHORITY_MODEL.md`), separate
 from the application's administrative authority.
 
 Consequence worth recording: a Django superuser reaches `/admin/` but does not
-automatically hold application administrative authority (`account.manage`),
+automatically hold application administrative authority (`is_platform_admin`),
 and never holds professional authorship. Conversely, `is_platform_admin` grants
-`account.manage` but not `/admin/` access.
+application administrative authority but not `/admin/` access.
 
 Known limitation for later increments: `/admin/` editing is not yet covered by
 `AuditEvent`, because the `audit` module belongs to a later increment. Until
@@ -217,4 +219,88 @@ Total 55 new tests; the suite grew from 61 to 111.
 The B-03 tests run the settings module in a subprocess with a controlled
 environment, so the real import path and the real failure are exercised rather
 than a re-implementation of the rule.
+
+## 11. Correction Cycle R2 (R2-B01 … R2-B05)
+
+Independent re-review R2 decided **HOLD — CORRECTION REQUIRED (R2)**
+(`docs/gates/S01-I01_CORRECTION_R2.md`). The R1 findings were confirmed closed.
+Current main (`73e1e9f`) was merged into `build/slice-01` before any edit, and
+the S01-I01 implementation history was preserved.
+
+### R2-B01 — application account creation is authorized
+
+`identity.services.create_account` was ungated: it was reachable without an
+actor and could set `is_platform_admin=True`, so any caller could mint a
+Platform Admin. It now takes a required `actor` and calls
+`require_administrative_authority`, so only an active real Platform Admin may
+create an Account, whether ordinary or administrative.
+
+The chicken-and-egg case of the *first* admin is deliberately handled outside
+the service, in `identity.bootstrap.bootstrap_platform_admin`. That module is a
+technical/deployment boundary (`docs/AUTHORITY_MODEL.md`), is not imported by
+`services.py`, and grants no professional capability. Two tests assert the
+separation structurally (AST-level import check, and no bootstrap attribute on
+the services module). No product account-management UI was added.
+
+### R2-B02 — the Account→Person binding is frozen
+
+The Person is selectable at creation but not rebindable afterwards. The rule is
+enforced in `Account.save`, not only in a form, so Django Admin, forms, a shell
+session and future callers all obey it. The guard reads the *stored*
+`person_id` rather than the instance, so assigning `account.person_id = ...`
+directly cannot slip past it. `AccountChangeForm` additionally disables the
+field, keeping the binding visible but not editable.
+
+Residual path, documented rather than overstated: `QuerySet.update()` is raw SQL
+and bypasses `save()`. It is not a supported application path; a test records
+the boundary explicitly so the guard is not credited with more than it does.
+
+### R2-B03 — CapabilityGrant admin is read-only
+
+The technical admin exposed add/change/delete for grants. Adding a grant there
+could not satisfy the required issuer, and change/delete would bypass the
+service semantics (the real acting admin is recorded, revocation preserves
+history instead of deleting). `CapabilityGrantAdmin` is now inspection-only:
+every field is read-only and `has_add_permission`, `has_change_permission` and
+`has_delete_permission` all return `False` for every actor, including a Django
+superuser holding all permissions. Grant operations remain available only
+through `identity.services`.
+
+### R2-B04 — grant history survives recipient deletion
+
+`CapabilityGrant.account` changed from `CASCADE` to `PROTECT`. Deleting a
+recipient Account that has grant history is now refused at the database level,
+so authorisation records are not silently cascaded away
+(`docs/INVARIANTS.md` §1, §16). Account deactivation remains the normal
+lifecycle operation: a deactivated Account stops authorizing but is still not
+deletable while referenced. The initial migration was regenerated cleanly, as
+in R1, because the schema is still development-only with no persistent data.
+
+All three foreign keys out of `CapabilityGrant` (`account`, `granted_by_account`)
+and into `Person` now use `PROTECT`, so no deletion path erases identity or
+authority history.
+
+### R2-B05 — documentation corrected
+
+`docs/IMPLEMENTATION_NOTES_S01_I01.md` no longer states that mutations require
+an `account.manage` grant; it points at the real rule (a real, active Platform
+Admin). PR #1's body no longer claims `docs/S01_I01_EXPECTED_OUTPUTS.md` is
+missing — that file exists and the note was stale. All R1 evidence is retained
+and the R2 evidence is added beside it.
+
+### Regression tests added (R2)
+
+| Blocker | Test file | Count |
+|---|---|---|
+| R2-B01 | `identity/tests/test_account_creation_authorization.py` | 17 |
+| R2-B02 | `identity/tests/test_person_binding_immutable.py` | 12 |
+| R2-B03 | `identity/tests/test_grant_admin_readonly.py` | 12 |
+| R2-B04 | `identity/tests/test_grant_history_preserved.py` | 10 |
+
+The suite grew from 111 to 162 tests.
+
+### Gate
+
+The gate remains **HOLD — RE-REVIEW REQUIRED**. This executor does not
+self-declare PASS; that outcome belongs to the independent reviewer.
 

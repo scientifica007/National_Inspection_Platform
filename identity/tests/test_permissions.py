@@ -20,7 +20,8 @@ from identity.permissions import (
     has_capability,
     require_capability,
 )
-from identity.services import create_account, grant_capability
+from identity.services import grant_capability
+from identity.tests.factories import make_account
 
 pytestmark = pytest.mark.django_db
 
@@ -62,7 +63,7 @@ class TestAllScope:
     """Requirement 6: ALL capability evaluation."""
 
     def test_all_grant_authorizes_the_own_person(self, grant_issuer):
-        account = create_account(
+        account = make_account(
             username="all-scope",
             password="synthetic-all-pass-01",
             display_name="صاحب صلاحية عامة",
@@ -76,7 +77,7 @@ class TestAllScope:
         assert has_capability(account, Capability.VISIT_READ_ALL) is True
 
     def test_all_grant_authorizes_any_subject_person(self, grant_issuer, other_person):
-        account = create_account(
+        account = make_account(
             username="all-scope-2",
             password="synthetic-all-pass-02",
             display_name="صاحب صلاحية عامة",
@@ -116,7 +117,7 @@ class TestValidity:
         assert has_capability(inspector_account, Capability.VISIT_CREATE) is False
 
     def test_future_valid_from_boundary_is_respected(self, grant_issuer):
-        account = create_account(
+        account = make_account(
             username="future-window",
             password="synthetic-future-pass-01",
             display_name="نافذة مستقبلية",

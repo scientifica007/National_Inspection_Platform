@@ -76,11 +76,12 @@ AI features, generic workflow/rule engines, microservices.
 | Python | `.venv/bin/python --version` | Python 3.12.14 |
 | Django | `python -c "import django; print(django.get_version())"` | Django 5.2.17 |
 | Ruff lint | `ruff check .` | All checks passed |
-| Ruff format | `ruff format --check .` | 86 files already formatted |
+| Ruff format | `ruff format --check .` | 94 files already formatted |
 | Django check | `python manage.py check` | no issues (0 silenced) |
 | Migration check | `python manage.py makemigrations --check --dry-run` | No changes detected |
 | Migrations applied | `python manage.py showmigrations identity` | `[X] 0001_initial` |
-| Tests | `pytest -q` | 111 passed |
+| Fresh DB migration path | `POSTGRES_DB=<fresh> python manage.py migrate` | all migrations applied OK |
+| Tests | `pytest -q` | 162 passed |
 | PostgreSQL | `connection.vendor` | `postgresql` (PostgreSQL 17.11) |
 | CI | GitHub Actions run on correction head | pass |
 
@@ -127,17 +128,37 @@ Independent review R1 (`docs/gates/S01-I01_CORRECTION_R1.md`) decided
 ## Corrections
 - Correction cycle R1: B-01 … B-07 corrected, N-01 cleaned.
 - Correction commit: `00a4aab` (all B-01..B-07 code and test corrections). This gate record is updated in the commit that follows it.
+- Correction cycle R2: R2-B01 … R2-B05 corrected. See
+  `docs/gates/S01-I01_CORRECTION_R2.md` and
+  `docs/IMPLEMENTATION_NOTES_S01_I01.md` §11 for the implementation detail.
+
+### Blocking — Correction Cycle R2
+
+Independent re-review R2 decided **HOLD — CORRECTION REQUIRED (R2)**. The R1
+findings were confirmed closed; five further blockers were raised and corrected.
+
+| ID | Severity | Status | Correction |
+|---|---|---|---|
+| R2-B01 | Critical | corrected | `identity.services.create_account` was ungated and could mint `is_platform_admin=True` accounts. It now requires an active real Platform Admin actor. Seeding the first admin is separated into `identity.bootstrap`, which the service does not import. |
+| R2-B02 | High | corrected | An existing Account could be rebound to another Person through Django Admin. `Account.save` now refuses a `person` change for a persisted Account (reading the stored value, so a direct `person_id` assignment cannot bypass it), and `AccountChangeForm` disables the field. |
+| R2-B03 | High | corrected | `CapabilityGrant` admin exposed add/change/delete that bypassed service and issuer semantics. `CapabilityGrantAdmin` is now inspection-only: all fields read-only, add/change/delete disabled for every actor including a superuser with all permissions. |
+| R2-B04 | High | corrected | `CapabilityGrant.account` used `CASCADE`, so deleting a recipient destroyed its authorisation history. Changed to `PROTECT`; deactivation remains the lifecycle operation. |
+| R2-B05 | Medium | corrected | Stale documentation: the notes no longer claim mutations require an `account.manage` grant, and PR #1 no longer claims `docs/S01_I01_EXPECTED_OUTPUTS.md` is missing. |
+
+### Non-blocking (R2)
+- N-02 (still deferred, as instructed): the Platform Admin product UI remains
+  read-only.
 
 ## Re-verification
-- [x] all blocking findings resolved
-- [x] regression tests added
-- [x] relevant checks pass (111 tests, Ruff, Django check, migration check, CI)
+- [x] all blocking findings resolved (R1 and R2)
+- [x] regression tests added (110 total across both cycles)
+- [x] relevant checks pass (162 tests, Ruff, Django check, migration check, fresh-DB migration path, CI)
 
 ## Checkpoint Decision
 
 `HOLD — RE-REVIEW REQUIRED`
 
-Correction cycle R1 is complete: all seven blocking findings were corrected and
+Correction cycle R2 is complete: the five blocking findings were corrected and
 regression-tested, and the full suite passes against PostgreSQL with CI green.
 This record does **not** claim PASS. Closing each blocker, and any subsequent
 `PASS — NEXT INCREMENT ALLOWED`, is reserved for the independent reviewer or

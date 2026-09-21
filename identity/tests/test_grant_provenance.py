@@ -13,7 +13,8 @@ from django.db.models import ProtectedError
 
 from identity.models import CapabilityGrant
 from identity.permissions import Capability
-from identity.services import create_account, grant_capability, revoke_capability
+from identity.services import grant_capability, revoke_capability
+from identity.tests.factories import make_account
 
 pytestmark = pytest.mark.django_db
 
@@ -79,7 +80,7 @@ class TestServiceRecordsTheRealActor:
     """Regression 4: a service-created grant records the actual admin."""
 
     def test_grant_records_the_real_admin_actor(self, grant_issuer):
-        account = create_account(
+        account = make_account(
             username="grant-recipient",
             password="synthetic-recipient-pass",
             display_name="مستلم المنحة (بيانات اختبار)",
@@ -92,7 +93,7 @@ class TestServiceRecordsTheRealActor:
         assert grant.granted_by_account_id == grant_issuer.pk
 
     def test_issued_grants_are_traceable_from_the_actor(self, grant_issuer):
-        account = create_account(
+        account = make_account(
             username="grant-recipient-2",
             password="synthetic-recipient-pass-2",
             display_name="مستلم المنحة ٢ (بيانات اختبار)",

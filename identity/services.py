@@ -31,6 +31,7 @@ def create_person(*, display_name: str) -> Person:
 
 def create_account(
     *,
+    actor: Account,
     username: str,
     password: str,
     display_name: str | None = None,
@@ -40,10 +41,20 @@ def create_account(
 ) -> Account:
     """Create an Account for a Person.
 
+    Creating an Account is an administrative mutation, so it requires an active
+    real Platform Admin actor (R2-B01). Without this gate the service was an
+    ungated path that could mint Platform Admins. Explicit bounded delegation
+    remains deferred, so an ``account.manage`` grant does not satisfy it.
+
+    Seeding the very first Platform Admin is a separate technical concern with
+    its own entry point: ``identity.bootstrap.bootstrap_platform_admin``.
+
     ``is_platform_admin`` grants administrative authority only. It never
     creates a professional capability and never reuses another Person's
     identity.
     """
+    require_administrative_authority(actor, action="create_account")
+
     return Account.objects.create_user(
         username=username,
         email=email,
