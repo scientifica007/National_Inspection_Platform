@@ -148,3 +148,27 @@ Added:
 - `docs/gates/S01-I01_CORRECTION_R4_1.md`
 
 S01-I02 remains unauthorized.
+
+
+## 2026-09-21 — S01-I01 R4.1 Re-review / R5 Authority Closure
+
+Re-reviewed PR #1 at head `6db196d`.
+
+R4.1 result:
+- explicit-PK unsaved Platform Admin residual: closed.
+- PostgreSQL-backed suite: 229 passed.
+- CI green.
+
+Final permission-surface closure audit found one pre-existing blocker:
+- R5-B01: generic professional capability evaluation trusts the caller Account object's identity state and can query a real Account's persisted grants through a borrowed PK/person binding.
+
+This was present in the original permission foundation; it was not introduced by R4.1.
+
+Gate:
+- `HOLD — CORRECTION REQUIRED (R5 / AUTHORITY CLOSURE)`
+
+Added:
+- `docs/OPENHANDS_CORRECTION_PROMPT_S01_I01_R5.md`
+- `docs/gates/S01-I01_CORRECTION_R5.md`
+
+S01-I02 remains unauthorized.
