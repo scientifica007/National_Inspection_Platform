@@ -9,6 +9,22 @@
 
 **M0 — Foundation / Domain Design — COMPLETE**
 
+## Documentation baseline
+
+**DOCUMENTED AND INDEXED**
+
+The repository now contains:
+- product/domain/authority/lifecycle baseline.
+- architecture/dependency/engineering baseline.
+- security/data-governance baseline.
+- UI/maintenance/repository-governance baseline.
+- roadmap/risk/traceability/decision records.
+- controlled executor/reviewer/correction/checkpoint protocols.
+- human acceptance and release gates.
+
+Canonical map:
+`docs/DOCUMENTATION_INDEX.md`
+
 ## Current delivery readiness
 
 **READY FOR AI EXECUTOR — CONTROLLED IMPLEMENTATION**
@@ -31,8 +47,8 @@ Then execute only:
 
 After implementation:
 - verify.
-- independently review.
-- correct.
+- independently review using `AI_REVIEWER_PROMPT_01.md`.
+- correct blocking findings.
 - reverify.
 - record checkpoint.
 
@@ -64,6 +80,11 @@ No S01-I02 work starts before S01-I01 is explicitly marked:
 - local work remains possible.
 - historical execution uses snapshots/versioned meaning.
 - changing reality should be Data/Configuration whenever it is not a stable domain law.
+
+## Repository-governance note
+
+GitHub currently reports `main` as unprotected.  
+This does not block S01-I01 design readiness, but branch-protection settings should be reviewed before routine implementation merges to `main`.
 
 ## Human review state
 
