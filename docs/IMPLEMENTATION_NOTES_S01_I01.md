@@ -550,3 +550,94 @@ Python authority primitive, so the schema is untouched.
 The gate remains **HOLD — RE-REVIEW REQUIRED**. As in R1–R3, this executor does
 not self-declare PASS.
 
+## 14. Residual Correction Cycle R4.1 (R4-B01-R)
+
+One residual case remained after R4 and is corrected here. No S01-I02 work was
+started, no migration was produced, and no product surface was added.
+
+### R4-B01-R — an unsaved Account could borrow a real Platform Admin's `pk`
+
+R4 established that the actor must be a real `Account`, must have a `pk`, must
+have a row, and must be an active Platform Admin in the *stored* row. One shape
+slipped through:
+
+```python
+borrowed = Account(username="x", is_platform_admin=True, is_active=True)
+borrowed.pk = real_admin.pk  # explicit PK, copied
+```
+
+`pk is not None` cannot distinguish "this instance is persisted" from "this
+instance merely carries a primary key value". The `pk` check passed, the
+database lookup then resolved to the genuine privileged row, and the mutation
+was authorized — while the actor handed to the services was never a persisted
+identity. Because services write provenance from the actor
+(`granted_by_account=actor`), a fabricated instance could attribute its mutation
+to the real admin's FK. This violates Actor Always Known and Identity Cannot Be
+Borrowed.
+
+The primitive now also requires the instance to be actually saved:
+
+```python
+if actor._state.adding:
+    raise PermissionDeniedError(...)  # unsaved, even with an explicit pk
+```
+
+`_state.adding` is Django's own persisted/unsaved marker and is `True` on a
+newly constructed instance regardless of any assigned `pk`. The existing
+current-row lookup is kept unchanged, so stale deactivated/demoted actors are
+still caught by stored state. Order matters: the `adding` check runs before the
+lookup, so an unsaved instance never reaches authorization.
+
+Confirmed at reproduction time, before the fix, that the defect was real and not
+theoretical: a borrowed-`pk` instance was **allowed** through
+`require_administrative_authority`, and `grant_capability` with it **created a
+grant and recorded the real admin as `granted_by_account`**.
+
+### Regression tests added (R4.1)
+
+`identity/tests/test_unsaved_actor_explicit_pk.py` — 11 tests:
+
+| Requirement | Test |
+|---|---|
+| 1–3 unsaved instance with the real admin's `pk` is denied | `test_borrowed_pk_instance_is_denied` |
+| — same with matching flags/superuser/staff | `test_borrowed_pk_instance_is_denied_even_when_flags_match` |
+| — unsaved instance without `pk` still denied | `test_unsaved_account_without_pk_is_denied` |
+| — unsaved instance borrowing an ordinary account's `pk` denied | `test_unsaved_instance_with_borrowed_pk_of_ordinary_account_is_denied` |
+| — unsaved instance borrowing a deactivated admin's `pk` denied | `test_unsaved_instance_borrowing_pk_of_deactivated_admin_is_denied` |
+| 4 service `grant_capability` must not mutate | `test_grant_capability_rejects_a_borrowed_pk_actor` |
+| 4 provenance must not name the real admin | `test_grant_capability_does_not_record_the_real_admin_as_issuer` |
+| 4 service `create_person` must not mutate | `test_create_person_rejects_a_borrowed_pk_actor` |
+| 5 genuine loaded admin still succeeds | `test_genuine_loaded_platform_admin_still_succeeds` |
+| 5 genuine admin services still work end to end | `test_services_still_work_for_a_genuine_admin` |
+| — a row-loaded instance modified in memory still passes | `test_detached_reload_is_not_treated_as_unsaved` |
+
+The last two guard against over-tightening: the check targets Django's unsaved
+state, not "the object is not the exact instance last saved".
+
+The suite grew from 218 to 229 tests.
+
+The tests were confirmed to detect the residual defect: removing the
+`_state.adding` check made **5 of the 11 fail** — the denial test, the
+flags-match variant, and all three service-mutation tests. They are genuine
+regression tests.
+
+### Verification (R4.1)
+
+| Check | Command | Result |
+|---|---|---|
+| Ruff lint | `ruff check .` | All checks passed |
+| Ruff format | `ruff format --check .` | 108 files already formatted |
+| Django check | `python manage.py check` | no issues (0 silenced) |
+| Migration check | `makemigrations --check --dry-run` | No changes detected |
+| Fresh-DB path | `POSTGRES_DB=nip_r41 manage.py migrate` | full chain applied OK |
+| Tests | `pytest -q` | 229 passed |
+| PostgreSQL | `connection.vendor` / server version | `postgresql` / 17.11 |
+
+No migration was produced or required: the residual correction is one Python
+authority check, so the schema is untouched.
+
+### Gate
+
+The gate remains **HOLD — RE-REVIEW REQUIRED**. This executor does not
+self-declare PASS.
+

@@ -76,12 +76,12 @@ AI features, generic workflow/rule engines, microservices.
 | Python | `.venv/bin/python --version` | Python 3.12.14 |
 | Django | `python -c "import django; print(django.get_version())"` | Django 5.2.17 |
 | Ruff lint | `ruff check .` | All checks passed |
-| Ruff format | `ruff format --check .` | 105 files already formatted |
+| Ruff format | `ruff format --check .` | 108 files already formatted |
 | Django check | `python manage.py check` | no issues (0 silenced) |
 | Migration check | `python manage.py makemigrations --check --dry-run` | No changes detected |
 | Migrations applied | `python manage.py showmigrations identity` | `[X] 0001_initial` |
 | Fresh DB migration path | `POSTGRES_DB=<fresh> python manage.py migrate` | all migrations applied OK |
-| Tests | `pytest -q` | 218 passed |
+| Tests | `pytest -q` | 229 passed |
 | PostgreSQL | `connection.vendor` | `postgresql` (PostgreSQL 17.11) |
 | CI | GitHub Actions run on the pushed head | see PR #1 |
 
@@ -206,18 +206,44 @@ remote output was inspected with the credential sanitized. The credential is
 treated as exposed and its rotation is the maintainer's action, not this
 executor's.
 
+## Corrections — Cycle R4.1 (residual)
+
+Correction cycle R4.1: `R4-B01-R` corrected. See
+`docs/gates/S01-I01_CORRECTION_R4_1.md` and
+`docs/IMPLEMENTATION_NOTES_S01_I01.md` §14 for the implementation detail.
+
+### Blocking — Correction Cycle R4.1
+
+Independent re-review R4 closed `R4-B02` and confirmed `R4-B01` substantially
+corrected, with one residual case.
+
+| ID | Severity | Status | Correction |
+|---|---|---|---|
+| R4-B01-R | High | corrected | An unsaved `Account` could carry an explicit `pk` copied from a real Platform Admin. `pk is not None` cannot distinguish "persisted" from "carries a PK value", so the check passed and the subsequent stored-row lookup resolved to the genuine privileged row, authorizing the mutation. The actor handed to the services was never a persisted identity, and because provenance is written from the actor (`granted_by_account=actor`), the mutation could be attributed to the real admin's FK — violating Actor Always Known and Identity Cannot Be Borrowed. The primitive now also rejects any instance still in Django's unsaved state (`actor._state.adding`) before the lookup. The current-row active/admin lookup is unchanged, so stale deactivated/demoted actors are still caught by stored state. No authentication redesign, no delegation, no capability types, no migration. |
+
+Reproduction before the fix confirmed the defect was real: a borrowed-`pk`
+instance was allowed through `require_administrative_authority`, and
+`grant_capability` with it created a grant recording the real admin as issuer.
+
+### Non-blocking (R4.1)
+- The raw `QuerySet.update()` Person-binding bypass remains unsupported, as
+  accepted in R2 scope.
+- The product Platform Admin management UI remains deferred.
+- `AuditEvent` coverage remains deferred to the audit increment.
+
 ## Re-verification
-- [x] all blocking findings resolved (R1, R2, R3 and R4)
-- [x] regression tests added (110 across R1/R2; 37 in R3; 19 in R4)
-- [x] relevant checks pass (218 tests, Ruff, Django check, migration check, fresh-DB migration path, CI)
+- [x] all blocking findings resolved (R1, R2, R3, R4 and R4.1)
+- [x] regression tests added (110 across R1/R2; 37 in R3; 19 in R4; 11 in R4.1)
+- [x] relevant checks pass (229 tests, Ruff, Django check, migration check, fresh-DB migration path, CI)
 - [x] new R3 tests confirmed to fail against the pre-correction implementation
 - [x] new R4 tests confirmed to fail against the pre-correction implementation (10 of 19)
+- [x] new R4.1 tests confirmed to fail against the pre-correction implementation (5 of 11)
 
 ## Checkpoint Decision
 
 `HOLD — RE-REVIEW REQUIRED`
 
-Correction cycles R1 through R4 are complete: every blocking finding was
+Correction cycles R1 through R4.1 are complete: every blocking finding was
 corrected and regression-tested, and the full suite passes against PostgreSQL
 with CI green. This record does **not** claim PASS. Closing each blocker, and any
 subsequent `PASS — NEXT INCREMENT ALLOWED`, is reserved for the independent

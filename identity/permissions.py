@@ -224,7 +224,11 @@ def require_administrative_authority(
     are never trusted on their own: a fabricated object, an unsaved Account, or
     a stale instance whose row was since deactivated or demoted is rejected.
     The flag is re-read from the database so the decision reflects stored
-    authority rather than whatever the caller happened to hold in memory.
+    authority rather than whatever the caller happened to hold in memory. An
+    unsaved instance is rejected even when it carries an explicit primary key,
+    so a fabricated Account cannot borrow a real Platform Admin's ``pk``
+    (R4-B01-R): authorization follows the persisted acting identity, and
+    provenance is never attributed to an identity that did not act.
 
     Django's technical superuser layer is not consulted. It stays separate
     from application administrative authority, so a technical superuser without
@@ -235,6 +239,13 @@ def require_administrative_authority(
         raise PermissionDeniedError(f"هذا الفعل الإداري ({action}) يتطلب حسابًا حقيقيًا محفوظًا.")
     if actor.pk is None:
         raise PermissionDeniedError(f"لا يمكن تنفيذ فعل إداري ({action}) بحساب غير محفوظ.")
+    if actor._state.adding:
+        # An unsaved instance carrying an explicit ``pk`` copied from a real
+        # Platform Admin would otherwise satisfy the ``pk is not None`` check
+        # and then be authorised by the lookup of the genuine row below. The
+        # actor handed to the services was never a persisted identity, and
+        # provenance written from it would credit the real admin (R4-B01-R).
+        raise PermissionDeniedError(f"لا يمكن تنفيذ فعل إداري ({action}) بحساب لم يُحفظ بعد.")
 
     stored = (
         Account.objects.filter(pk=actor.pk).values_list("is_platform_admin", "is_active").first()
