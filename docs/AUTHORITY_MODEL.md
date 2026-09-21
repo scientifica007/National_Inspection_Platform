@@ -1,5 +1,8 @@
 # Authority Model
 
+- Status: **Accepted for initial implementation**
+- Owner approval: 2026-09-21
+
 ## الهدف
 
 بناء صلاحيات مرنة تسمح بالتغيير التنظيمي والعمل الفردي والجماعي من دون تحويل الرتب إلى قيود صلبة في الكود.
@@ -16,8 +19,6 @@
 
 ## قاعدة التقييم
 
-الصلاحية الفعلية تصور منطقيًا كالتالي:
-
 ```text
 EffectiveAuthority =
     Capability
@@ -27,7 +28,35 @@ EffectiveAuthority =
     ∩ DomainInvariants
 ```
 
-امتلاك Role أو Position لا يتجاوز الـDomain Invariants.
+امتلاك Role أو Position أو Admin status لا يتجاوز Domain Invariants.
+
+## Scope semantics
+
+Scope قيمة دلالية وليست نصًا اعتباطيًا.
+
+أمثلة مستقبلية:
+
+```text
+OWN
+NATIONAL
+ORGANIZATION(id)
+GEOGRAPHY(id)
+TEAM(id)
+INSTITUTION(id)
+MISSION(id)
+```
+
+إذا انطبق أكثر من قيد على Grant واحد فالمعنى الافتراضي هو **التقاطع**.
+
+مثال:
+```text
+GEOGRAPHY(Tébessa) ∩ TEAM(A)
+```
+يعني عناصر Team A الواقعة داخل نطاق تبسة.
+
+الـUnion يحتاج Grants منفصلة أو Policy صريحة؛ لا يستنتج تلقائيًا.
+
+في Vertical Slice 01 ننفذ فقط OWN وALL لتقليل التعقيد.
 
 ## طبقات السلطة
 
@@ -41,12 +70,16 @@ EffectiveAuthority =
 لا تستخدم لتبرير انتحال هوية مستخدم وظيفي، وكل عملية حساسة قابلة للتدقيق تقنيًا.
 
 ### Admin
-أعلى سلطة داخل التطبيق:
-- يرى البيانات ضمن النظام.
+أعلى سلطة إدارية داخل التطبيق:
+- يرى بيانات التطبيق وفق السياسة الإدارية العامة.
 - يدير الحسابات والصلاحيات والتهيئة.
-- يمكنه إنشاء/إدارة كيانات العمل عندما تسمح الـUse Case.
-- لا يستطيع إعادة كتابة سجل مهني مثبت لمستخدم آخر.
-- لا يحصل على حق "التصرف باسم شخص آخر" لمجرد كونه Admin.
+- ينشئ/يدير كيانات العمل عندما تسمح Use Case.
+- لاحقًا يستطيع إنشاء Missions ونشرها أو تكليف المؤهلين.
+- لا يعيد كتابة سجل مهني مثبت.
+- لا يحصل على حق التصرف باسم شخص آخر.
+- Admin status وحدها ليست Professional Capability.
+
+قد يكون Person نفسه Admin ومفتشًا/وزيرًا/صاحب Position مهنية. عند تنفيذ فعل مهني يسجل الفعل باسمه الحقيقي وبالسياق المهني المستخدم.
 
 ### Functional Positions
 أمثلة:
@@ -57,17 +90,18 @@ EffectiveAuthority =
 
 هذه Positions/Profiles قابلة للتهيئة وليست if/else صلبة في Domain.
 
+يمكن لسياسة المنصة منح Position أعلى مجموعة Professional Capabilities تشمل ما يحتاجه من أعمال المستويات الأدنى، من دون استعارة هوية أي شخص آخر.
+
 ## Capability Grants
 
 Grant نموذجي يحتوي:
-
-- subject: شخص أو Team/Position policy عند الحاجة.
-- capability: مثل VIEW, CREATE, ASSIGN, APPROVE, PUBLISH.
-- scope: National / Organization / Geography / Team / Institution / Own.
+- subject.
+- capability.
+- scope.
 - valid_from / valid_until.
 - context optional.
 - grant_source.
-- delegable: هل يسمح بتفويض جزء منها؟
+- delegable.
 
 ## Delegation
 
@@ -80,17 +114,13 @@ Grant نموذجي يحتوي:
 
 ## Ownership vs Visibility vs Authority
 
-هذه ثلاثة أشياء مستقلة:
-
 - **Ownership**: من أنشأ/يمتلك المسودة؟
 - **Visibility**: من يستطيع رؤيتها؟
 - **Authority**: من يستطيع تنفيذ فعل معين عليها؟
 
-رؤية الكيان لا تعني حق تعديله.
+الرؤية لا تعني حق التعديل.
 
 ## Inheritance
-
-يمكن أن تمنح المناصب الأعلى Capability set أوسع، لكن:
 
 **Capability inheritance does not imply identity inheritance.**
 
