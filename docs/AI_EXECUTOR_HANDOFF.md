@@ -75,6 +75,10 @@ Supporting:
 - `docs/MINIMAL_STABLE_CORE.md`
 - `docs/MODULE_DEPENDENCY_MAP.md`
 - `docs/ENGINEERING_CONVENTIONS.md`
+- `docs/SECURITY_AND_DATA_GOVERNANCE.md`
+- `docs/REPOSITORY_GOVERNANCE.md`
+- `docs/CONTROLLED_IMPLEMENTATION_CYCLE.md`
+- `docs/AI_REVIEWER_PROMPT_01.md`
 - accepted ADRs.
 
 ## Important limitation
