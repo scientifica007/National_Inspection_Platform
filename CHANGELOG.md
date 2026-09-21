@@ -84,3 +84,22 @@ Added:
 - `docs/gates/S01-I01_CORRECTION_R2.md`
 
 S01-I02 remains unauthorized.
+
+
+## 2026-09-21 — S01-I01 Independent Re-review R3
+
+Re-reviewed PR #1 at head `b94eb38` after correction cycle R2.
+
+R2 blockers R2-B01…R2-B05 were closed. Gate remains:
+- `HOLD — CORRECTION REQUIRED (R3)`
+
+Remaining blockers:
+- R3-B01: bootstrap Platform Admin creation can orphan a Person if Account creation fails.
+- R3-B02: `identity.services.create_person` is an ungated application identity mutation.
+- R3-B03: local setup docs distinguish neither Django superuser nor explain first Platform Admin bootstrap.
+
+Added:
+- `docs/OPENHANDS_CORRECTION_PROMPT_S01_I01_R3.md`
+- `docs/gates/S01-I01_CORRECTION_R3.md`
+
+S01-I02 remains unauthorized.
