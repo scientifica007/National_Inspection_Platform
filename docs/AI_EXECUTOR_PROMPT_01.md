@@ -55,6 +55,27 @@ Do not pre-build Teams, Missions, Assignments, national dashboards, generic work
 - permissions tested for unauthenticated, owner inspector, another inspector and Admin.
 - run tests and lint before completion.
 
+## Execution process
+
+Do NOT implement the complete slice in one pass.
+
+Follow:
+- `docs/CONTROLLED_IMPLEMENTATION_CYCLE.md`
+- `docs/SLICE_01_INCREMENT_PLAN.md`
+- `docs/INCREMENT_GATE_TEMPLATE.md`
+
+Start with **S01-I01 only**.
+
+After each increment:
+- run its automated checks.
+- provide the exact commit and test evidence.
+- stop for an independent review pass.
+- fix all blocking findings.
+- rerun checks.
+- continue only after the increment checkpoint is marked `PASS — NEXT INCREMENT ALLOWED`.
+
+Do not enter Human Acceptance until all planned Slice 01 increments have passed review and correction.
+
 ## Completion
 
 Do not stop at scaffolding or a prototype.
