@@ -67,7 +67,9 @@ If a true conflict remains after applying this order, implementation must stop a
 - `VERTICAL_SLICE_01_DATA_MODEL_REVIEW.md` — review conclusions.
 - `INITIAL_IMPLEMENTATION_SCOPE.md` — in/out boundaries.
 - `AI_EXECUTOR_SPEC_01.md` — controlled implementation specification.
-- `AI_EXECUTOR_PROMPT_01.md` — executor prompt.
+- `AI_EXECUTOR_PROMPT_01.md` — generic executor prompt.
+- `OPENHANDS_EXECUTOR_PROMPT_S01_I01.md` — OpenHands-specific prompt for S01-I01.
+- `S01_I01_EXPECTED_OUTPUTS.md` — precise expected outputs/non-outputs for S01-I01.
 - `AI_REVIEWER_PROMPT_01.md` — independent reviewer/auditor prompt.
 
 ## Reviews and readiness
