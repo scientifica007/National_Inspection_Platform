@@ -1,19 +1,17 @@
-# Vertical Slice 01 — Concrete Data Model Draft
+# Vertical Slice 01 — Concrete Data Model
 
-## Status
-
-**DESIGN DRAFT — no migrations yet**
-
-The purpose is to remove implementation ambiguity before an executor writes code.
+- Status: **Reviewed baseline for implementation**
+- Review: `docs/VERTICAL_SLICE_01_DATA_MODEL_REVIEW.md`
 
 ## Conventions
 
 - UUID primary keys for business entities.
 - UTC timestamps in storage; presentation uses configured local timezone.
-- explicit `created_at`, `updated_at` for mutable drafts where useful.
+- explicit `created_at`, `updated_at` for mutable objects where useful.
 - finalized timestamps are separate from ordinary update timestamps.
-- actor IDs are stored explicitly for important actions.
+- actor/person IDs are explicit for important actions.
 - no hard-coded institution/checklist lists.
+- database constraints reinforce, but do not replace, application/domain authorization.
 
 ## identity
 
@@ -29,41 +27,36 @@ Person
 
 ### Account
 
-For Django implementation this is expected to be a custom User model from day one.
+Custom Django User from day one.
 
 ```text
 Account
 - id
-- person_id -> Person
+- person_id -> Person (1:1 for Slice 01)
 - username
 - authentication fields
 - active
 - is_platform_admin
 ```
 
-`is_platform_admin` is administrative access, not professional authorship.
+`is_platform_admin` grants application administration, not professional authorship.
 
 ### CapabilityGrant
+
+Slice 01 deliberately keeps scope small.
 
 ```text
 CapabilityGrant
 - id: UUID
 - account_id
 - capability_code
-- scope_kind
-- scope_id nullable
+- scope_kind: OWN | ALL
 - valid_from nullable
 - valid_until nullable
 - delegable boolean
 - granted_by_account_id
 - revoked_at nullable
 ```
-
-For Slice 01, scope kinds may be only:
-- OWN
-- ALL
-
-Do not build the full scope engine yet.
 
 Example capability codes:
 - institution.create.local
@@ -77,7 +70,7 @@ Example capability codes:
 - visit.read.all
 - account.manage
 
-Capability identifiers correspond to real use cases and therefore may be code constants; grants are data.
+Capability identifiers correspond to stable application use cases and may be code constants; grants are data.
 
 ## institutions
 
@@ -91,12 +84,11 @@ Institution
 - created_by_person_id
 - local_owner_person_id
 - created_at
+- updated_at
 - archived_at nullable
 ```
 
-No national institution registry is required in Slice 01.
-
-Hard delete is allowed only if no finalized historical record depends on it. If historical dependency exists, archive/tombstone instead.
+Hard delete is allowed only when no finalized historical record depends on the Institution.
 
 ## knowledge
 
@@ -108,8 +100,8 @@ Checklist
 - title
 - owner_person_id
 - lifecycle: LOCAL_ACTIVE | ARCHIVED
-- current_version_number
 - created_at
+- archived_at nullable
 ```
 
 ### ChecklistVersion
@@ -119,12 +111,19 @@ ChecklistVersion
 - id: UUID
 - checklist_id
 - version_number
+- status: DRAFT | ACTIVE | ARCHIVED
 - created_by_person_id
 - created_at
-- frozen boolean
+- activated_at nullable
 ```
 
-A version used by a Visit snapshot is never rewritten.
+Rules:
+- DRAFT editable/deletable.
+- ACTIVE immutable.
+- editing an ACTIVE checklist creates a new DRAFT version.
+- Visit may snapshot only ACTIVE version.
+- uniqueness: `(checklist_id, version_number)`.
+- default current version is the highest/explicitly current ACTIVE version according to the application rule.
 
 ### ChecklistItem
 
@@ -139,7 +138,7 @@ ChecklistItem
 - position
 ```
 
-Hierarchy is supported without forcing it on the first UI.
+ChecklistItem rows belonging to ACTIVE versions are immutable.
 
 ## visits
 
@@ -151,22 +150,24 @@ Visit
 - owner_person_id
 - institution_id nullable
 - institution_snapshot: JSON
-- title/purpose
+- title
+- purpose nullable
 - planned_date nullable
 - status: DRAFT | FINALIZED
 - created_at
+- updated_at
 - finalized_at nullable
 - finalized_by_person_id nullable
 ```
 
-The institution snapshot stores at least immutable display identity needed to understand the historical visit even if the local source is later archived.
+The Institution snapshot stores only the historical display identity required to understand the Visit.
 
 ### VisitChecklistSnapshot
 
 ```text
 VisitChecklistSnapshot
 - id: UUID
-- visit_id
+- visit_id (1:1 in Slice 01)
 - source_checklist_id nullable
 - source_version_id nullable
 - title_snapshot
@@ -186,7 +187,9 @@ VisitSnapshotNode
 - position
 ```
 
-These rows are immutable once created except while the Visit is still in a creation transaction before exposure to the user. Updating the source Checklist never updates these nodes.
+Snapshot rows are copies and are never updated because the source Checklist changes.
+
+While Visit is DRAFT, the user may replace the selected Checklist/version only when doing so will not orphan node-linked draft professional records. Slice 01 blocks replacement if such records exist.
 
 ## records
 
@@ -216,13 +219,13 @@ Recommendation
 - updated_at
 ```
 
-While Visit is DRAFT, owner-authorized edits are allowed.
+While Visit is DRAFT, authorized owner edits are allowed.
 
 When Visit becomes FINALIZED:
 - Finding/Recommendation are immutable.
 - update/delete commands reject server-side.
 
-Amendment is intentionally deferred from UI in Slice 01; the first slice therefore warns clearly before finalization. The generic correction mechanism is introduced before production use.
+Amendment UI is deferred from Slice 01 but required before real official production/pilot data.
 
 ## audit
 
@@ -240,15 +243,17 @@ AuditEvent
 - metadata: JSON
 ```
 
-AuditEvent is append-only and is not the canonical business history.
+AuditEvent is append-only and is not canonical business history.
 
-## Transaction: finalize visit
+## Finalize Visit transaction
 
 ```text
 BEGIN
   authorize visit.finalize.own
+  lock/read current Visit
   assert Visit.status == DRAFT
-  validate required internal consistency
+  validate snapshot consistency
+  validate child-record consistency
   set Visit.status = FINALIZED
   set finalized_at
   set finalized_by_person_id
@@ -256,18 +261,18 @@ BEGIN
 COMMIT
 ```
 
-All subsequent mutation commands must check status in the application/domain layer.
+All later mutation commands must reject FINALIZED state in application/service logic. UI hiding alone is insufficient.
 
-## Not modeled yet
+## Not modeled in Slice 01
 
-- Team
+- Team / TeamCycle
 - Mission
 - Assignment
 - Approval/Publish
-- Delegation UI
+- advanced Delegation
 - advanced geographic scope
 - Report
 - Dataset
 - Amendment UI
 
-These remain part of the broader Domain Model but are deliberately outside Slice 01.
+These are intentionally deferred without changing their conceptual place in the broader Domain.
