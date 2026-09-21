@@ -149,6 +149,23 @@ Additionally:
 - finalized objects reject direct ORM/service-level mutation through public application commands.
 - no business invariant exists only in JavaScript/template logic.
 
+## Execution cadence
+
+Implementation MUST follow `docs/CONTROLLED_IMPLEMENTATION_CYCLE.md` and `docs/SLICE_01_INCREMENT_PLAN.md`.
+
+Do not implement the whole slice in one uncontrolled pass.
+
+For each increment:
+1. implement only that increment.
+2. run required verification.
+3. submit the increment for review.
+4. correct review findings.
+5. re-run verification.
+6. record a checkpoint.
+7. proceed only after `PASS — NEXT INCREMENT ALLOWED`.
+
+Human acceptance starts only after all Slice 01 increments have passed their machine review/correction gates.
+
 ## Deliverables
 
 - working application.
