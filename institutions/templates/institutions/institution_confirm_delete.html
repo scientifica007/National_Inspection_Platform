@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}حذف مؤسسة — المنصة الوطنية للتفتيش{% endblock %}
+
+{% block content %}
+<header class="page__header">
+    <h1 class="page__title">حذف مؤسسة</h1>
+    <p class="page__subtitle">هذا إجراء نهائي للمؤسسة المحلية غير المرتبطة بتاريخ مثبت.</p>
+</header>
+
+<section class="card">
+    <p>تأكيد حذف المؤسسة: <strong>{{ institution.name }}</strong></p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="button-row">
+            <button class="button button--danger" type="submit">تأكيد الحذف</button>
+            <a class="button button--secondary" href="{% url 'institutions:detail' institution.pk %}">إلغاء</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

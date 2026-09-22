@@ -10,9 +10,8 @@ from django.apps import apps
 from django.conf import settings
 from django.core.management import call_command
 
-#: Modules explicitly deferred beyond S01-I01. None may be installed yet.
+#: Modules explicitly deferred beyond S01-I02. None may be installed yet.
 DEFERRED_APPS = {
-    "institutions",
     "knowledge",
     "visits",
     "records",
@@ -45,11 +44,11 @@ def test_no_deferred_business_module_is_installed():
 
 
 def test_only_identity_application_module_exists():
-    """Only the identity bounded module is added in this increment."""
+    """Only the authorized Slice 01 modules through S01-I02 are installed."""
     project_apps = [
         config.label for config in apps.get_app_configs() if not config.name.startswith("django.")
     ]
-    assert project_apps == ["identity"]
+    assert project_apps == ["identity", "institutions"]
 
 
 def test_postgresql_is_the_configured_canonical_database():

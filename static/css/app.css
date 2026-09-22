@@ -258,6 +258,24 @@ body {
     background-color: var(--color-primary-hover);
 }
 
+.button--secondary {
+    background-color: var(--color-surface);
+    border-color: var(--color-border-strong);
+    color: var(--color-text);
+}
+
+.button--danger {
+    background-color: var(--color-danger);
+    color: var(--color-text-inverted);
+}
+
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-block-start: var(--space-4);
+}
+
 .button--block {
     inline-size: 100%;
 }

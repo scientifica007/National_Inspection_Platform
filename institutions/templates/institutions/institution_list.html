@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}مؤسساتي — المنصة الوطنية للتفتيش{% endblock %}
+
+{% block content %}
+<header class="page__header">
+    <h1 class="page__title">مؤسساتي</h1>
+    <p class="page__subtitle">المؤسسات المحلية المرئية لهويتك الحالية.</p>
+    {% if can_create %}
+        <div class="button-row">
+            <a class="button button--primary" href="{% url 'institutions:create' %}">إضافة مؤسسة</a>
+        </div>
+    {% endif %}
+</header>
+
+<section class="card" aria-labelledby="institutions-heading">
+    <h2 class="card__title" id="institutions-heading">قائمة المؤسسات</h2>
+    {% if institutions %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th scope="col">الاسم</th>
+                    <th scope="col">الحالة</th>
+                    <th scope="col">المالك المحلي</th>
+                    <th scope="col">إجراء</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for institution in institutions %}
+                    <tr>
+                        <td>{{ institution.name }}</td>
+                        <td>
+                            {% if institution.lifecycle == "LOCAL_ACTIVE" %}
+                                <span class="badge badge--success">{{ institution.get_lifecycle_display }}</span>
+                            {% else %}
+                                <span class="badge badge--neutral">{{ institution.get_lifecycle_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ institution.local_owner_person.display_name }}</td>
+                        <td>
+                            <a href="{% url 'institutions:detail' institution.pk %}">عرض</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty-state">لا توجد مؤسسات مرئية حاليًا.</div>
+    {% endif %}
+</section>
+{% endblock %}

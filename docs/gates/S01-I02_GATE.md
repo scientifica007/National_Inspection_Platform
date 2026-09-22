@@ -6,7 +6,7 @@
 
 ## Status
 
-`AUTHORIZED — IMPLEMENTATION PENDING`
+`IMPLEMENTED — AWAITING INDEPENDENT RE-REVIEW`
 
 ## Goal
 
@@ -62,52 +62,59 @@ Introduce local Institution master data as the first business module while prese
 
 ## Acceptance Criteria
 
-- [ ] Institution has UUID PK, name, lifecycle, creator, local owner, timestamps and archived_at.
-- [ ] no hard-coded Institution registry/data.
-- [ ] create derives creator/owner from persisted actor identity.
-- [ ] `institution.create.local` controls local creation.
-- [ ] owner read requires `institution.read.own`.
-- [ ] owner edit/archive/delete requires stored ownership plus existing `institution.create.local`.
-- [ ] active Platform Admin can list/view all Institutions.
-- [ ] Platform Admin status alone cannot edit/archive/delete another Person's Institution.
-- [ ] another inspector cannot discover/read/mutate another owner's Institution.
-- [ ] archived Institution remains readable when visible but is not editable.
-- [ ] archive is one-way in S01-I02; no unarchive.
-- [ ] authorized unreferenced local Institution can be hard-deleted.
-- [ ] protected-delete condition maps to an explicit retention/domain error; no silent cascade.
-- [ ] no owner-transfer/impersonation path.
-- [ ] forms do not expose creator/owner/lifecycle internals as writable fields.
-- [ ] mutations are CSRF-protected and server-authorized.
-- [ ] S01-I01 regression tests remain green.
-- [ ] no S01-I03 or later module added.
+- [x] Institution has UUID PK, name, lifecycle, creator, local owner, timestamps and archived_at.
+- [x] no hard-coded Institution registry/data.
+- [x] create derives creator/owner from persisted actor identity.
+- [x] `institution.create.local` controls local creation.
+- [x] owner read requires `institution.read.own`.
+- [x] owner edit/archive/delete requires stored ownership plus existing `institution.create.local`.
+- [x] active Platform Admin can list/view all Institutions.
+- [x] Platform Admin status alone cannot edit/archive/delete another Person's Institution.
+- [x] another inspector cannot discover/read/mutate another owner's Institution.
+- [x] archived Institution remains readable when visible but is not editable.
+- [x] archive is one-way in S01-I02; no unarchive.
+- [x] authorized unreferenced local Institution can be hard-deleted.
+- [x] protected-delete condition maps to an explicit retention/domain error; no silent cascade.
+- [x] no owner-transfer/impersonation path.
+- [x] forms do not expose creator/owner/lifecycle internals as writable fields.
+- [x] mutations are CSRF-protected and server-authorized.
+- [x] S01-I01 regression tests remain green.
+- [x] no S01-I03 or later module added.
 
 ## Required Automated Checks
 
-- [ ] Ruff lint.
-- [ ] Ruff format.
-- [ ] Django system check.
-- [ ] migration generation/review.
-- [ ] `makemigrations --check --dry-run`.
-- [ ] model/lifecycle tests.
-- [ ] application service tests.
-- [ ] owner / other inspector / Admin permission matrix.
-- [ ] HTTP/authentication/CSRF tests.
-- [ ] PostgreSQL full suite.
-- [ ] fresh empty PostgreSQL migration path.
-- [ ] no secrets/real data/future modules.
+- [x] Ruff lint.
+- [x] Ruff format.
+- [x] Django system check.
+- [x] migration generation/review.
+- [x] `makemigrations --check --dry-run`.
+- [x] model/lifecycle tests.
+- [x] application service tests.
+- [x] owner / other inspector / Admin permission matrix.
+- [x] HTTP/authentication/CSRF tests.
+- [x] PostgreSQL full suite.
+- [x] fresh empty PostgreSQL migration path.
+- [x] no secrets/real data/future modules.
 
 ## Implementation Result
 
 - branch: `build/s01-i02`
-- starting main SHA:
+- starting main SHA: `dd2a17dbb161f342631c7e468223ce02197622d8`
 - implementation commits:
-- final head:
-- draft PR:
+  - `0e424eb` — Implement S01-I02 local institutions.
+  - final evidence commit recorded in the PR/final executor report.
+- final head: recorded in the PR/final executor report after the final evidence push.
+- draft PR: https://github.com/scientifica007/National_Inspection_Platform/pull/2
 - files/modules changed:
-- migrations:
-- test count:
-- CI:
-- notes:
+  - new `institutions` app.
+  - `config` app registration and URL routing.
+  - base navigation and existing CSS components.
+  - project scope/PostgreSQL tests.
+  - S01-I02 implementation notes/gate evidence.
+- migrations: `institutions/migrations/0001_initial.py`
+- test count: `312 passed`
+- CI: pending after draft PR/final push.
+- notes: PostgreSQL 16.15 local verification completed; no SQLite fallback used; no S01-I03+ module added.
 
 ## Review Findings
 
@@ -137,7 +144,7 @@ Pending.
 
 Current:
 
-`HOLD — IMPLEMENTATION / INDEPENDENT REVIEW REQUIRED`
+`HOLD — RE-REVIEW REQUIRED`
 
 Executor must leave this as:
 
