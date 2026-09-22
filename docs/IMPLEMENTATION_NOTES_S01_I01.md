@@ -641,3 +641,112 @@ authority check, so the schema is untouched.
 The gate remains **HOLD — RE-REVIEW REQUIRED**. This executor does not
 self-declare PASS.
 
+## 15. Authority Closure — Correction Cycle R5 (R5-B01)
+
+R4/R4.1 hardened the *administrative mutation* primitive. R5 closed the same
+actor-identity class in the *generic professional* authority surface, which was a
+pre-existing defect in the original permission foundation rather than a
+regression from R4.1.
+
+### R5-B01 — professional evaluation trusted the caller-supplied Account
+
+`evaluate_capability` read `is_active` from the object it was handed and queried
+`account.capability_grants` through that object's primary key. An unsaved
+Account could copy a real professional Account's `pk` and `person_id` and
+therefore:
+
+```python
+borrowed = Account(username="x", person=real_inspector.person, is_active=True)
+borrowed.pk = real_inspector.pk
+```
+
+be evaluated against the real Account's stored grants — satisfying an OWN grant
+(`granted_own`) or an ALL grant (`granted_all`). Confirmed at reproduction time
+before the fix: both decisions came back **allowed**. The defect also reached the
+inherited `has_capability` / `require_capability`, `can_perform_professional_work`,
+`is_platform_admin`, and the identity read selectors `grants_for` /
+`accounts_visible_to`.
+
+### Correction — one persisted-actor resolver
+
+`resolve_persisted_account(account) -> (Account | None, reason | None)` is now the
+single authority source. It rejects, in order:
+
+| Input | Reason code |
+|---|---|
+| not an `Account` instance | `invalid_actor` |
+| `pk is None` **or** Django unsaved state (`_state.adding`) | `actor_not_persisted` |
+| no matching database row | `actor_not_found` |
+
+and otherwise returns the **current stored row** (`select_related("person")`).
+Every authority helper and read selector routes through it:
+
+- `evaluate_capability` evaluates the stored row's `is_active`,
+  `is_platform_admin`, `person_id` and grants. A denial from the resolver is
+  returned as an explainable `AuthorityDecision` with the stable reason code.
+- `has_capability` and `require_capability` inherit this unchanged.
+- `can_perform_professional_work` returns `False` for any malformed or inactive
+  actor and enumerates the stored row's grants.
+- `is_platform_admin` reports whether the stored row currently holds
+  administrative authority — the flag **and** active state — and `False` for any
+  malformed actor. Active state is included deliberately: reporting the raw flag
+  would make this helper a weaker gate than `evaluate_capability(ACCOUNT_MANAGE)`
+  and `require_administrative_authority`, inviting its misuse as an
+  authorization check.
+- `grants_for` / `accounts_visible_to` return empty querysets for a malformed
+  actor instead of resolving rows through a borrowed primary key.
+- `require_administrative_authority` now reuses the same resolver while
+  **preserving its exact R1–R4.1 semantics** (same rejection conditions, same
+  denial branches, same Arabic messages, same ordering guarantee that an unsaved
+  actor never reaches the lookup).
+
+The requested OWN-scope identity is still judged against the **stored**
+`person_id`, so a caller mutating a loaded instance's `person_id` cannot widen or
+redirect the scope. No delegation, no policy engine, no middleware or
+authentication redesign, and no new capability was introduced.
+
+### Regression tests added (R5)
+
+`identity/tests/test_professional_actor_persistence.py` — **42 tests**:
+
+| Requirement | Coverage |
+|---|---|
+| 1 borrowed `pk`+`person_id` cannot satisfy an OWN grant | `TestProfessionalOwnGrantCannotBeBorrowed` (6) |
+| 2 borrowed identity cannot satisfy an ALL grant | `TestProfessionalAllGrantCannotBeBorrowed` (3) |
+| 3 `require_capability` raises for a fabricated actor | `TestRequireCapabilityRaisesForFabricatedActor` (3) |
+| 4 stale actor denied after stored deactivation | `TestStaleActorIsDenied` (5) |
+| 5 caller-side `person_id` mutation cannot change OWN scope | `TestCallerPersonRebindingCannotChangeOwnScope` (3) |
+| 6 genuine persisted Account still succeeds | `TestGenuineAccountsStillWork` (3) |
+| 7 admin without a professional grant still fails | `TestAdminStatusIsStillNotProfessionalAuthorship` (3) |
+| 8/9 `can_perform_professional_work` false/true cases | `TestCanPerformProfessionalWork` (4) |
+| resolver contract and stable reason codes | `TestResolverContract` (4) |
+| read selectors resolve the persisted identity | `TestSelectorsResolvePersistedIdentity` (7) |
+| 10 all R1–R4.1 authority regressions remain green | full suite |
+
+Suite grew from 229 to **271** tests.
+
+Revert-proof: restoring the pre-fix primitive (trusting the caller-supplied
+instance) failed **19 of the 42** new tests, including the explicit OWN and ALL
+borrowing cases which then returned `allowed=True`. They are genuine regression
+tests.
+
+### Verification (R5)
+
+| Check | Command | Result |
+|---|---|---|
+| Ruff lint | `ruff check .` | All checks passed |
+| Ruff format | `ruff format --check .` | 111 files already formatted |
+| Django check | `python manage.py check` | no issues (0 silenced) |
+| Migration check | `makemigrations --check --dry-run` | No changes detected |
+| Fresh-DB path | `POSTGRES_DB=nip_r5 manage.py migrate` | full chain applied OK |
+| Tests | `pytest -q` | 271 passed |
+| PostgreSQL | `connection.vendor` / server version | `postgresql` / 17.11 |
+
+No migration was produced or required: the correction is confined to Python
+authority primitives, so the schema is untouched.
+
+### Gate
+
+The gate remains **HOLD — RE-REVIEW REQUIRED**. This executor does not
+self-declare PASS.
+

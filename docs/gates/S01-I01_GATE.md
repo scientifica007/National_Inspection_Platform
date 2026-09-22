@@ -76,12 +76,12 @@ AI features, generic workflow/rule engines, microservices.
 | Python | `.venv/bin/python --version` | Python 3.12.14 |
 | Django | `python -c "import django; print(django.get_version())"` | Django 5.2.17 |
 | Ruff lint | `ruff check .` | All checks passed |
-| Ruff format | `ruff format --check .` | 108 files already formatted |
+| Ruff format | `ruff format --check .` | 111 files already formatted |
 | Django check | `python manage.py check` | no issues (0 silenced) |
 | Migration check | `python manage.py makemigrations --check --dry-run` | No changes detected |
 | Migrations applied | `python manage.py showmigrations identity` | `[X] 0001_initial` |
 | Fresh DB migration path | `POSTGRES_DB=<fresh> python manage.py migrate` | all migrations applied OK |
-| Tests | `pytest -q` | 229 passed |
+| Tests | `pytest -q` | 271 passed |
 | PostgreSQL | `connection.vendor` | `postgresql` (PostgreSQL 17.11) |
 | CI | GitHub Actions run on the pushed head | see PR #1 |
 
@@ -231,21 +231,66 @@ instance was allowed through `require_administrative_authority`, and
 - The product Platform Admin management UI remains deferred.
 - `AuditEvent` coverage remains deferred to the audit increment.
 
+## Corrections — Cycle R5 (authority closure)
+
+Correction cycle R5: `R5-B01` corrected. See
+`docs/gates/S01-I01_CORRECTION_R5.md` and
+`docs/IMPLEMENTATION_NOTES_S01_I01.md` §15 for the implementation detail.
+
+### Blocking — Correction Cycle R5
+
+Independent review R5 closed the R4.1 explicit-PK residual and raised a
+**pre-existing** authority-foundation defect in the generic professional
+surface.
+
+| ID | Severity | Status | Correction |
+|---|---|---|---|
+| R5-B01 | High | corrected | `evaluate_capability` trusted the caller-supplied Account: it read `is_active` from the object and queried grants through its primary key. An unsaved Account copying a real professional Account's `pk`/`person_id` was evaluated against that Account's stored grants, satisfying OWN (`granted_own`) or ALL (`granted_all`); the defect also reached `has_capability`, `require_capability`, `can_perform_professional_work`, `is_platform_admin` and the read selectors. A single persisted-actor resolver now rejects non-Account input (`invalid_actor`), unsaved/`pk is None` actors (`actor_not_persisted`) and rows that no longer exist (`actor_not_found`), and every authority helper and read selector resolves the current stored row before evaluating active state, Person binding, grants or the administrative flag. `require_administrative_authority` reuses the resolver while preserving its exact R1–R4.1 semantics. No delegation, policy engine, middleware or authentication redesign, and no migration. |
+
+Reproduction before the fix confirmed the defect was real: the borrowed-identity
+OWN and ALL evaluations both returned `allowed=True`.
+
+### Non-blocking (R5)
+- The `Model.delete()` / `QuerySet.update()` bypasses remain unsupported
+  application paths, as accepted in R2 scope.
+- The product Platform Admin management UI remains deferred.
+- `AuditEvent` coverage remains deferred to the audit increment.
+
 ## Re-verification
-- [x] all blocking findings resolved (R1, R2, R3, R4 and R4.1)
-- [x] regression tests added (110 across R1/R2; 37 in R3; 19 in R4; 11 in R4.1)
-- [x] relevant checks pass (229 tests, Ruff, Django check, migration check, fresh-DB migration path, CI)
+- [x] all blocking findings resolved (R1, R2, R3, R4, R4.1 and R5)
+- [x] regression tests added (110 across R1/R2; 37 in R3; 19 in R4; 11 in R4.1; 42 in R5)
+- [x] relevant checks pass (271 tests, Ruff, Django check, migration check, fresh-DB migration path, CI)
 - [x] new R3 tests confirmed to fail against the pre-correction implementation
 - [x] new R4 tests confirmed to fail against the pre-correction implementation (10 of 19)
 - [x] new R4.1 tests confirmed to fail against the pre-correction implementation (5 of 11)
+- [x] new R5 tests confirmed to fail against the pre-correction implementation (19 of 42)
+
+## Final authority-closure inspection
+
+Every identity authority/read helper was inspected for the same root assumption:
+
+| Helper | Actor source | Verdict |
+|---|---|---|
+| `resolve_persisted_account` | — | the resolver itself |
+| `evaluate_capability` | resolved stored row | hardened |
+| `has_capability` / `require_capability` | inherit `evaluate_capability` | hardened |
+| `is_platform_admin` | resolved stored row | hardened |
+| `can_perform_professional_work` | resolved stored row | hardened |
+| `require_administrative_authority` | resolved stored row | hardened (R4/R4.1), semantics preserved |
+| `grants_for` / `accounts_visible_to` | resolved stored row | hardened |
+| `deactivate_account` (mutation *target*) | target, not actor | safe: authorization is still the actor gate |
+| `request.user`-only UI reads | authenticated session user | safe by construction: Django loads a persisted row; no caller-supplied identity |
+
+No remaining surface reads authority from a caller-supplied Account instance.
 
 ## Checkpoint Decision
 
 `HOLD — RE-REVIEW REQUIRED`
 
-Correction cycles R1 through R4.1 are complete: every blocking finding was
-corrected and regression-tested, and the full suite passes against PostgreSQL
-with CI green. This record does **not** claim PASS. Closing each blocker, and any
+Correction cycles R1 through R5 are complete: every blocking finding was
+corrected and regression-tested, the authority surface now has a single
+persisted-actor source, and the full suite passes against PostgreSQL with CI
+green. This record does **not** claim PASS. Closing each blocker, and any
 subsequent `PASS — NEXT INCREMENT ALLOWED`, is reserved for the independent
 reviewer or maintainer. S01-I02 is not started.
 

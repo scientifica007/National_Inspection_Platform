@@ -14,6 +14,13 @@ helper anywhere that lets an Account act as another Person. Where professional
 authorship is required, callers must pass the subject Person explicitly; the
 recorded actor is always the real acting Account/Person.
 
+Authority is read from the persisted Account row, never from the object a caller
+supplies (R5-B01). A fabricated, unsaved, borrowed-``pk``, missing or stale
+Account cannot inherit a real Account's active state, Person binding, grants or
+administrative flag. Every primitive here and every identity read selector
+resolves the stored row through :func:`resolve_persisted_account` first, so this
+actor-identity class is closed in one place rather than helper by helper.
+
 Administrative mutation authority is deliberately narrow in S01-I01: only a
 real Platform Admin (``is_platform_admin``) may run account-management
 mutations. An ``account.manage`` grant does **not** satisfy them, because
@@ -103,11 +110,50 @@ class AuthorityDecision:
         return self.allowed
 
 
+#: Stable reason codes for an actor that is not a trustworthy persisted identity.
+#: Kept as plain strings so denial is testable without depending on message text.
+REASON_INVALID_ACTOR = "invalid_actor"
+REASON_ACTOR_NOT_PERSISTED = "actor_not_persisted"
+REASON_ACTOR_NOT_FOUND = "actor_not_found"
+
+
+def resolve_persisted_account(account: object) -> tuple[Account | None, str | None]:
+    """Resolve the persisted Account row that an actor claim must rest on.
+
+    Authority is a property of stored data, never of the object a caller hands
+    in. A caller can fabricate an Account-shaped object, build an unsaved
+    instance, copy a real Account's ``pk``/``person_id``, or hold a stale
+    instance whose row changed underneath it. None of those acts transfers the
+    stored identity's authority, and none may borrow its grants.
+
+    Returns ``(stored_account, None)`` for a genuine persisted Account, or
+    ``(None, reason_code)`` otherwise. Callers decide how to deny; the reason
+    codes are stable so each denial is testable.
+
+    This is the single authority source for the identity permission layer: every
+    evaluator and read helper routes through it so the same actor-identity class
+    cannot be discovered one helper at a time.
+    """
+    if not isinstance(account, Account):
+        return None, REASON_INVALID_ACTOR
+    if account.pk is None or account._state.adding:
+        # ``pk is None`` alone is not enough: an unsaved instance can carry an
+        # explicit ``pk`` copied from a real Account, which would then resolve
+        # to that Account's stored row and borrow its authority.
+        return None, REASON_ACTOR_NOT_PERSISTED
+
+    stored = Account.objects.select_related("person").filter(pk=account.pk).first()
+    if stored is None:
+        return None, REASON_ACTOR_NOT_FOUND
+    return stored, None
+
+
 def _subject_for(account: Account, subject_person: Person | None) -> Person | None:
     """Resolve the Person an action would apply to.
 
     ``None`` means "the Account's own Person", which keeps ordinary call sites
-    short without inventing an implicit identity switch.
+    short without inventing an implicit identity switch. ``account`` is always a
+    persisted row, so the OWN-scope Person binding is the stored one.
     """
     return subject_person if subject_person is not None else account.person
 
@@ -132,15 +178,24 @@ def evaluate_capability(
     ``subject_person`` is the Person the action applies to. When omitted it is
     the Account's own Person. A subject Person supplied by a caller is always
     honoured as given: no code path silently substitutes another identity.
+
+    Evaluation runs against the *persisted* Account row (R5-B01), not the object
+    the caller supplied. A fabricated, unsaved, borrowed-``pk`` or stale Account
+    therefore cannot borrow a real Account's active state, Person binding or
+    grants — it is denied before any grant is consulted.
     """
     if capability_code not in ALL_CAPABILITIES:
         return AuthorityDecision(False, capability_code, "unknown_capability")
 
-    if not account.is_active:
+    stored, denial = resolve_persisted_account(account)
+    if denial is not None:
+        return AuthorityDecision(False, capability_code, denial)
+
+    if not stored.is_active:
         return AuthorityDecision(False, capability_code, "account_inactive")
 
     now = at or timezone.now()
-    subject = _subject_for(account, subject_person)
+    subject = _subject_for(stored, subject_person)
 
     # Administrative capability: satisfied by administrative authority only.
     #
@@ -149,12 +204,12 @@ def evaluate_capability(
     # arbitrary capabilities, bypassing scope and delegable semantics. Explicit
     # delegation is deferred, so the rule is simply: real Platform Admin only.
     if capability_code in ADMINISTRATIVE_CAPABILITIES:
-        if account.is_platform_admin:
+        if stored.is_platform_admin:
             return AuthorityDecision(True, capability_code, "platform_admin")
         return AuthorityDecision(False, capability_code, "not_platform_admin")
 
     # Professional capability: never satisfied by administrative status.
-    grants = _active_grants(account, capability_code, now)
+    grants = _active_grants(stored, capability_code, now)
     if not grants:
         return AuthorityDecision(False, capability_code, "no_active_grant")
 
@@ -162,7 +217,7 @@ def evaluate_capability(
         if grant.scope_kind == CapabilityGrant.ScopeKind.ALL:
             return AuthorityDecision(True, capability_code, "granted_all")
         if grant.scope_kind == CapabilityGrant.ScopeKind.OWN and (
-            subject is not None and subject.pk == account.person_id
+            subject is not None and subject.pk == stored.person_id
         ):
             return AuthorityDecision(True, capability_code, "granted_own")
 
@@ -198,8 +253,20 @@ def require_capability(
 
 
 def is_platform_admin(account: Account) -> bool:
-    """Whether the Account holds administrative authority."""
-    return bool(account.is_platform_admin)
+    """Whether the Account currently holds administrative authority.
+
+    Reads the persisted row (R5-B01), so a fabricated, unsaved, borrowed-``pk``
+    or stale Account cannot claim administrative status that the stored row does
+    not grant it.
+
+    Active state is part of the answer: a deactivated Account holds no authority,
+    exactly as ``evaluate_capability(ACCOUNT_MANAGE)`` and
+    ``require_administrative_authority`` decide. Reporting the raw stored flag
+    here would make this helper a *weaker* gate than the mutation primitive and
+    invite its misuse as an authorization check.
+    """
+    stored, denial = resolve_persisted_account(account)
+    return denial is None and stored is not None and stored.is_platform_admin and stored.is_active
 
 
 def require_administrative_authority(
@@ -247,26 +314,32 @@ def require_administrative_authority(
         # provenance written from it would credit the real admin (R4-B01-R).
         raise PermissionDeniedError(f"لا يمكن تنفيذ فعل إداري ({action}) بحساب لم يُحفظ بعد.")
 
-    stored = (
-        Account.objects.filter(pk=actor.pk).values_list("is_platform_admin", "is_active").first()
-    )
-    if stored is None:
+    stored, denial = resolve_persisted_account(actor)
+    if denial == REASON_ACTOR_NOT_FOUND:
         raise PermissionDeniedError(f"لا يمكن تنفيذ فعل إداري ({action}) بحساب غير موجود.")
+    if denial is not None:  # pragma: no cover - guarded by the checks above
+        raise PermissionDeniedError(f"هذا الفعل الإداري ({action}) يتطلب حسابًا حقيقيًا محفوظًا.")
 
-    is_admin, is_active = stored
-    if not is_admin:
+    if not stored.is_platform_admin:
         raise PermissionDeniedError(f"هذا الفعل الإداري ({action}) متاح لمدير المنصة فقط.")
-    if not is_active:
+    if not stored.is_active:
         raise PermissionDeniedError(f"الحساب المعطّل لا يمكنه تنفيذ فعل إداري ({action}).")
 
 
 def can_perform_professional_work(account: Account) -> bool:
     """Whether the Account holds at least one currently valid professional grant.
 
-    Administrative status alone never makes this true.
+    Administrative status alone never makes this true. Evaluation reads the
+    persisted row (R5-B01), so a fabricated, unsaved, borrowed-``pk``, missing or
+    inactive Account is false — such an actor cannot inherit a real Account's
+    professional grants.
     """
+    stored, denial = resolve_persisted_account(account)
+    if denial is not None or not stored.is_active:
+        return False
+
     now = timezone.now()
-    for grant in account.capability_grants.all():
+    for grant in stored.capability_grants.all():
         if grant.capability_code in ADMINISTRATIVE_CAPABILITIES:
             continue
         if grant.is_valid_at(now):
