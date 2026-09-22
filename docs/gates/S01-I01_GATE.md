@@ -283,17 +283,37 @@ Every identity authority/read helper was inspected for the same root assumption:
 
 No remaining surface reads authority from a caller-supplied Account instance.
 
+## Independent Closure Review — 2026-09-22
+
+Reviewed implementation head before gate closure:
+
+`7938ba8f133f2814cd8b2172140a2284d4d23a01`
+
+Independent review verified:
+- R5-B01 is closed by a single persisted-actor resolver used by the professional and administrative authority surfaces.
+- R1 through R5 blocking findings are resolved.
+- the R5 regression suite exercises borrowed-PK/Person identity, stale actors, OWN/ALL grants, read selectors and the legitimate persisted path.
+- GitHub Actions run `35675070386` completed successfully against PostgreSQL with **271 passed**.
+- Ruff, Django system checks and pending-migration checks are green.
+- no future S01-I02 module is present.
+- PR #1 remains draft/open and unmerged at the time of review.
+
+Accepted non-blocking deferrals:
+- raw unsupported ORM bypasses such as direct `QuerySet.update()` are outside the supported application command path;
+- product Platform Admin management UI remains deferred until the appropriate later increment before Human Acceptance;
+- `AuditEvent` coverage remains owned by the later audit/finalization increment.
+
+No unresolved blocker remains for the S01-I01 acceptance criteria.
+
 ## Checkpoint Decision
 
-`HOLD — RE-REVIEW REQUIRED`
+`PASS — NEXT INCREMENT ALLOWED`
 
-Correction cycles R1 through R5 are complete: every blocking finding was
-corrected and regression-tested, the authority surface now has a single
-persisted-actor source, and the full suite passes against PostgreSQL with CI
-green. This record does **not** claim PASS. Closing each blocker, and any
-subsequent `PASS — NEXT INCREMENT ALLOWED`, is reserved for the independent
-reviewer or maintainer. S01-I02 is not started.
+S01-I01 is closed from the independent-review perspective.
 
 ## Next Increment
-Not defined. `S01-I02` remains unauthorized until S01-I01 is explicitly marked
-`PASS — NEXT INCREMENT ALLOWED` by the review/maintainer process.
+
+`S01-I02 — Local Institutions`
+
+Authorization to begin S01-I02 applies **after PR #1 is merged into `main`** so
+the next implementation increment starts from the accepted S01-I01 baseline.
