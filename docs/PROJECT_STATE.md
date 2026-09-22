@@ -37,15 +37,15 @@ It does not authorize broad implementation of the complete national platform.
 
 ## Current implementation gate
 
-**S01-I01 — HOLD — MINIMAL RESIDUAL CORRECTION REQUIRED (R4.1)**
+**S01-I01 — HOLD — CORRECTION REQUIRED (R5 / AUTHORITY CLOSURE)**
 
-Independent re-review of the R4 correction closed R4-B02 and most of R4-B01, but found one residual identity-borrowing case: an unsaved Account with an explicit PK copied from a real Platform Admin can still pass the current persisted-actor check.
+Independent re-review closed the R4.1 borrowed-Platform-Admin residual. A final closure audit of all S01-I01 permission primitives found one pre-existing professional-authority gap: generic capability evaluation can still borrow a real Account's persisted grants through a fabricated Account carrying its PK/person binding.
 
 Active correction record:
-`docs/gates/S01-I01_CORRECTION_R4_1.md`
+`docs/gates/S01-I01_CORRECTION_R5.md`
 
 Authorized correction prompt:
-`docs/OPENHANDS_CORRECTION_PROMPT_S01_I01_R4_1.md`
+`docs/OPENHANDS_CORRECTION_PROMPT_S01_I01_R5.md`
 
 ## Next authorized action
 
@@ -53,7 +53,7 @@ Continue on implementation branch:
 
 `build/slice-01`
 
-Execute the **one-residual-fix R4.1 correction-only pass for S01-I01**.
+Execute the **R5 authority-closure correction-only pass for S01-I01**.
 
 S01-I02 remains unauthorized.
 
