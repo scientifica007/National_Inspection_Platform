@@ -202,3 +202,25 @@ Gate:
 Next required operation:
 - merge PR #1 into `main`;
 - only then begin the bounded S01-I02 — Local Institutions increment.
+
+
+## 2026-09-22 — S01-I01 Merged to Main
+
+PR #1 was marked ready for review and merged after the independent PASS gate.
+
+Merge:
+- PR: #1 — S01-I01 Project Skeleton + Identity/Authority Foundation.
+- merge commit: `72e156d4e285b334f83f7918068d6803d1b7f141`.
+- merge method: merge commit.
+
+Post-merge fresh read confirms that `main` contains:
+- accepted S01-I01 implementation;
+- PASS gate;
+- S01-I01 checkpoint;
+- full R1–R5 review/correction history.
+
+The repository CI workflow does not trigger on `main` pushes; the final reviewer-head CI run `35703589536` had already passed before merge.
+
+Next authorized increment:
+- `S01-I02 — Local Institutions`.
+- status: AUTHORIZED — NOT STARTED.
