@@ -172,3 +172,33 @@ Added:
 - `docs/gates/S01-I01_CORRECTION_R5.md`
 
 S01-I02 remains unauthorized.
+
+
+## 2026-09-22 — S01-I01 PASS
+
+Independent closure review completed for PR #1 after correction cycle R5.
+
+Reviewed implementation:
+- code head: `7938ba8f133f2814cd8b2172140a2284d4d23a01`
+- reviewer gate commit: `6ecaa621cd57696cc27e7ea4ce0343783f0835f5`
+
+Verification:
+- R5 PostgreSQL CI run `35675070386`: success, 271 tests passed.
+- reviewer gate-only CI run `35703589536`: success.
+- Ruff, format, Django system check and migration check green.
+- no S01-I02 module present.
+
+Review outcome:
+- all R1–R5 blocking findings resolved.
+- persisted-actor authority is shared across professional and administrative evaluation surfaces.
+- accepted non-blocking deferrals remain documented.
+
+Checkpoint:
+- `docs/checkpoints/S01-I01_PASS_2026-09-22.md`
+
+Gate:
+- `PASS — NEXT INCREMENT ALLOWED`
+
+Next required operation:
+- merge PR #1 into `main`;
+- only then begin the bounded S01-I02 — Local Institutions increment.
