@@ -2,7 +2,7 @@
 
 - Project: **National Inspection Platform**
 - Repository: `scientifica007/National_Inspection_Platform`
-- Date: 2026-09-21
+- Date: 2026-09-22
 - Canonical branch for design baseline: `main`
 
 ## Current milestone
@@ -37,46 +37,43 @@ It does not authorize broad implementation of the complete national platform.
 
 ## Current implementation gate
 
-**S01-I01 — HOLD — CORRECTION REQUIRED (R5 / AUTHORITY CLOSURE)**
+**S01-I01 — PASS — NEXT INCREMENT ALLOWED**
 
-Independent re-review closed the R4.1 borrowed-Platform-Admin residual. A final closure audit of all S01-I01 permission primitives found one pre-existing professional-authority gap: generic capability evaluation can still borrow a real Account's persisted grants through a fabricated Account carrying its PK/person binding.
+Independent closure review verified the final R5 authority correction at code head:
 
-Active correction record:
-`docs/gates/S01-I01_CORRECTION_R5.md`
+`7938ba8f133f2814cd8b2172140a2284d4d23a01`
 
-Authorized correction prompt:
-`docs/OPENHANDS_CORRECTION_PROMPT_S01_I01_R5.md`
+Reviewer-owned gate closure was recorded on the implementation branch at:
+
+`6ecaa621cd57696cc27e7ea4ce0343783f0835f5`
+
+Evidence:
+- R1 through R5 blocking findings resolved.
+- R5 PostgreSQL CI run `35675070386`: **271 passed**.
+- reviewer gate-only CI run `35703589536`: **success**.
+- no future S01-I02 module present.
+- accepted non-blocking deferrals remain documented.
+
+Accepted checkpoint:
+`docs/checkpoints/S01-I01_PASS_2026-09-22.md`
 
 ## Next authorized action
 
-Continue on implementation branch:
+**Merge PR #1 into `main`.**
 
-`build/slice-01`
+PR:
+`build/slice-01 → main`
 
-Execute the **R5 authority-closure correction-only pass for S01-I01**.
+Do not begin S01-I02 implementation from an unmerged S01-I01 branch.
 
-S01-I02 remains unauthorized.
+After PR #1 is merged and the accepted baseline is confirmed on `main`, the next bounded increment is:
 
-Selected executor for this increment:
-**OpenHands Cloud (free option), under controlled execution constraints.**
+**S01-I02 — Local Institutions**
 
-OpenHands-specific prompt:
-`docs/OPENHANDS_EXECUTOR_PROMPT_S01_I01.md`
+S01-I01 executor:
+**OpenHands Cloud**, under the controlled executor/reviewer/correction cycle.
 
-Expected outputs:
-`docs/S01_I01_EXPECTED_OUTPUTS.md`
-
-After correction:
-- rerun verification.
-- push corrections to PR #1.
-- stop with `HOLD — RE-REVIEW REQUIRED`.
-- independently re-review.
-- correct further if needed.
-- record checkpoint only after PASS.
-
-No S01-I02 work starts before S01-I01 is explicitly marked:
-
-`PASS — NEXT INCREMENT ALLOWED`
+Selection and prompt preparation for the S01-I02 executor occur only after the S01-I01 merge is confirmed.
 
 ## Accepted architectural baseline
 
