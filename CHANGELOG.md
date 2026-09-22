@@ -247,3 +247,28 @@ Execution constraints:
 - no S01-I03 work before independent PASS.
 
 The review standard is unchanged from S01-I01: implementation quality, authority, lifecycle, data integrity, scope, PostgreSQL verification and CI remain independently reviewed.
+
+
+## 2026-09-22 — S01-I02 Independent Review R1
+
+Reviewed Codex draft PR #2 at head `d5db159a00e15349192e09c6d4be5bd52bd2c760`.
+
+Positive:
+- S01-I02 scope discipline was strong.
+- Institution model/migration aligned with the accepted contract.
+- actor identity reused the accepted S01-I01 persisted-account authority.
+- PostgreSQL CI passed with 312 tests.
+- no S01-I03 module was added.
+
+Gate:
+- `HOLD — CORRECTION REQUIRED (R1)`
+
+Blocking findings:
+- S01-I02-R1-B01 (Critical): Institution permission/mutation logic trusts the caller-supplied target Institution object. A fabricated or stale target carrying a real row's PK can bypass stored ownership/lifecycle and mutate/archive/delete that row.
+- S01-I02-R1-B02 (High): Django InstitutionAdmin exposes add/change/delete and writable owner/creator/lifecycle fields, bypassing application service rules.
+
+Added:
+- `docs/CODEX_CORRECTION_PROMPT_S01_I02_R1.md`
+- `docs/gates/S01-I02_CORRECTION_R1.md`
+
+S01-I03 remains unauthorized.
