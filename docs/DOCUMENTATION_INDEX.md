@@ -59,6 +59,7 @@ If a true conflict remains after applying this order, implementation must stop a
 - `gates/S01-I01_CORRECTION_R4.md` — correction record for S01-I01 review cycle 4.
 - `gates/S01-I01_CORRECTION_R4_1.md` — residual correction record after R4 re-review.
 - `gates/S01-I01_CORRECTION_R5.md` — final authority-closure correction record.
+- `gates/S01-I02_GATE.md` — active implementation/review gate for S01-I02.
 - `checkpoints/S01-I01_PASS_2026-09-22.md` — accepted S01-I01 PASS checkpoint.
 - `CHECKPOINT_RECORD_TEMPLATE.md` — persisted checkpoint evidence.
 - `CORRECTION_CYCLE_TEMPLATE.md` — correction/re-verification record.
@@ -83,6 +84,8 @@ If a true conflict remains after applying this order, implementation must stop a
 - `OPENHANDS_CORRECTION_PROMPT_S01_I01_R4_1.md` — one-residual-fix OpenHands prompt after R4 correction re-review.
 - `OPENHANDS_CORRECTION_PROMPT_S01_I01_R5.md` — authority-closure OpenHands prompt after final S01-I01 permission audit.
 - `S01_I01_EXPECTED_OUTPUTS.md` — precise expected outputs/non-outputs for S01-I01.
+- `S01_I02_EXPECTED_OUTPUTS.md` — precise expected outputs/non-outputs and authority contract for S01-I02.
+- `CODEX_EXECUTOR_PROMPT_S01_I02.md` — Codex-specific controlled executor prompt for S01-I02.
 - `AI_REVIEWER_PROMPT_01.md` — independent reviewer/auditor prompt.
 
 ## Reviews and readiness
