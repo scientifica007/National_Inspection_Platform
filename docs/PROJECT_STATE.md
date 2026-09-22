@@ -79,7 +79,7 @@ The CI workflow runs on `build/**` pushes and pull requests targeting `main`; it
 
 Status:
 
-**AUTHORIZED — NOT STARTED**
+**HOLD — CORRECTION REQUIRED (R1)**
 
 The next increment must start from the current accepted `main` baseline and remain bounded to:
 - local Institution model/lifecycle;
@@ -104,7 +104,15 @@ Prepared control documents:
 Dedicated implementation branch:
 `build/s01-i02`
 
-Codex must implement S01-I02 only, open a draft PR, stop at `HOLD — RE-REVIEW REQUIRED`, and must not start S01-I03.
+Codex completed the first S01-I02 implementation in draft PR #2. Independent review found two blocking issues: target-Institution state is not re-resolved before authorization/mutation, and Django InstitutionAdmin bypasses application ownership/lifecycle rules.
+
+Active correction record:
+- `docs/gates/S01-I02_CORRECTION_R1.md`
+
+Authorized correction prompt:
+- `docs/CODEX_CORRECTION_PROMPT_S01_I02_R1.md`
+
+Codex may perform the R1 correction-only pass on `build/s01-i02`, then must stop at `HOLD — RE-REVIEW REQUIRED`. S01-I03 remains unauthorized.
 
 ## Accepted architectural baseline
 
