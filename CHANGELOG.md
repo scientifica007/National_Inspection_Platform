@@ -224,3 +224,26 @@ The repository CI workflow does not trigger on `main` pushes; the final reviewer
 Next authorized increment:
 - `S01-I02 — Local Institutions`.
 - status: AUTHORIZED — NOT STARTED.
+
+
+## 2026-09-22 — Codex Selected for S01-I02
+
+Selected Codex as the controlled executor for:
+- `S01-I02 — Local Institutions`.
+
+This is an intentional executor switch after S01-I01 was completed by OpenHands and merged.
+
+Prepared:
+- `docs/S01_I02_EXPECTED_OUTPUTS.md`
+- `docs/CODEX_EXECUTOR_PROMPT_S01_I02.md`
+- `docs/gates/S01-I02_GATE.md`
+
+Execution constraints:
+- branch: `build/s01-i02`.
+- start from current accepted `main`.
+- implement S01-I02 only.
+- create a draft PR.
+- stop at `HOLD — RE-REVIEW REQUIRED`.
+- no S01-I03 work before independent PASS.
+
+The review standard is unchanged from S01-I01: implementation quality, authority, lifecycle, data integrity, scope, PostgreSQL verification and CI remain independently reviewed.
