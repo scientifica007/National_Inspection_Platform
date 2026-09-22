@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}{{ institution.name }} — المنصة الوطنية للتفتيش{% endblock %}
+
+{% block content %}
+<header class="page__header">
+    <h1 class="page__title">{{ institution.name }}</h1>
+    <p class="page__subtitle">تفاصيل المؤسسة المحلية.</p>
+</header>
+
+<section class="card" aria-labelledby="institution-heading">
+    <h2 class="card__title" id="institution-heading">بيانات المؤسسة</h2>
+    <ul class="meta-list">
+        <li>
+            <span class="meta-list__label">الحالة</span>
+            <span>{{ institution.get_lifecycle_display }}</span>
+        </li>
+        <li>
+            <span class="meta-list__label">المالك المحلي</span>
+            <span>{{ institution.local_owner_person.display_name }}</span>
+        </li>
+        <li>
+            <span class="meta-list__label">أنشئت بواسطة</span>
+            <span>{{ institution.created_by_person.display_name }}</span>
+        </li>
+        <li>
+            <span class="meta-list__label">تاريخ الإنشاء</span>
+            <span>{{ institution.created_at|date:"d/m/Y" }}</span>
+        </li>
+        {% if institution.archived_at %}
+            <li>
+                <span class="meta-list__label">تاريخ الأرشفة</span>
+                <span>{{ institution.archived_at|date:"d/m/Y" }}</span>
+            </li>
+        {% endif %}
+    </ul>
+    <div class="button-row">
+        <a class="button button--secondary" href="{% url 'institutions:list' %}">رجوع</a>
+        {% if can_mutate %}
+            <a class="button button--primary" href="{% url 'institutions:edit' institution.pk %}">تعديل</a>
+            <form method="post" action="{% url 'institutions:archive' institution.pk %}">
+                {% csrf_token %}
+                <button class="button button--secondary" type="submit">أرشفة</button>
+            </form>
+            <a class="button button--danger" href="{% url 'institutions:delete' institution.pk %}">حذف</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}{% if mode == "edit" %}تعديل مؤسسة{% else %}إضافة مؤسسة{% endif %} — المنصة الوطنية للتفتيش{% endblock %}
+
+{% block content %}
+<header class="page__header">
+    <h1 class="page__title">{% if mode == "edit" %}تعديل مؤسسة{% else %}إضافة مؤسسة{% endif %}</h1>
+    <p class="page__subtitle">يُحفظ المالك والمنشئ من هوية الدخول الحالية.</p>
+</header>
+
+<section class="card">
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="form-error">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="form-field">
+            <label class="form-label" for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="form-error">{{ form.name.errors }}</div>
+            {% endif %}
+        </div>
+        <div class="button-row">
+            <button class="button button--primary" type="submit">حفظ</button>
+            <a class="button button--secondary" href="{% if institution %}{% url 'institutions:detail' institution.pk %}{% else %}{% url 'institutions:list' %}{% endif %}">إلغاء</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

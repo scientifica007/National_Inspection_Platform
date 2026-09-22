@@ -10,5 +10,6 @@ from django.urls import include, path
 urlpatterns = [
     # Django admin is a technical administration tool, not the product UI.
     path("admin/", admin.site.urls),
+    path("institutions/", include("institutions.urls")),
     path("", include("identity.urls")),
 ]

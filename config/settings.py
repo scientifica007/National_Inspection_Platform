@@ -62,8 +62,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # Bounded application modules. Slice 01 / increment S01-I01 adds identity only.
+    # Bounded application modules for the controlled Slice 01 increments.
     "identity",
+    "institutions",
 ]
 
 MIDDLEWARE = [

@@ -29,9 +29,9 @@ py-modules = []
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-src = ["config", "identity", "tests"]
+src = ["config", "identity", "institutions", "tests"]
 # Auto-generated migration files are not lint targets; their shape is owned by Django.
-exclude = ["identity/migrations"]
+exclude = ["identity/migrations", "institutions/migrations"]
 
 [tool.ruff.lint]
 select = [
@@ -51,13 +51,13 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["config", "identity"]
+known-first-party = ["config", "identity", "institutions"]
 
 # --- pytest ---
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py", "*_test.py"]
-testpaths = ["tests", "identity"]
+testpaths = ["tests", "identity", "institutions"]
 addopts = "-ra --strict-markers"
 markers = [
     "postgres: marks tests that require a PostgreSQL backend.",
