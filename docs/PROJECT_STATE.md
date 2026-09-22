@@ -57,23 +57,43 @@ Evidence:
 Accepted checkpoint:
 `docs/checkpoints/S01-I01_PASS_2026-09-22.md`
 
+## Merge state
+
+PR #1 was marked ready and merged into `main` on 2026-09-22.
+
+Merge commit:
+
+`72e156d4e285b334f83f7918068d6803d1b7f141`
+
+Fresh read after merge confirms that `main` contains:
+- the accepted S01-I01 implementation;
+- the reviewer-owned PASS gate;
+- the S01-I01 PASS checkpoint;
+- the R1–R5 review/correction history.
+
+The CI workflow runs on `build/**` pushes and pull requests targeting `main`; it does not run on direct `main` pushes/merge commits. The accepted reviewer-head CI had already passed before merge.
+
 ## Next authorized action
 
-**Merge PR #1 into `main`.**
-
-PR:
-`build/slice-01 → main`
-
-Do not begin S01-I02 implementation from an unmerged S01-I01 branch.
-
-After PR #1 is merged and the accepted baseline is confirmed on `main`, the next bounded increment is:
-
 **S01-I02 — Local Institutions**
+
+Status:
+
+**AUTHORIZED — NOT STARTED**
+
+The next increment must start from the current accepted `main` baseline and remain bounded to:
+- local Institution model/lifecycle;
+- inspector create/list/detail/edit/archive/delete rules;
+- server-side object permissions;
+- Admin visibility;
+- tests for hard-delete/retention and owner/other-inspector/Admin matrix.
+
+No S01-I03 or later work is authorized.
 
 S01-I01 executor:
 **OpenHands Cloud**, under the controlled executor/reviewer/correction cycle.
 
-Selection and prompt preparation for the S01-I02 executor occur only after the S01-I01 merge is confirmed.
+Executor selection and the exact S01-I02 implementation prompt remain to be prepared before implementation starts.
 
 ## Accepted architectural baseline
 
