@@ -1,7 +1,7 @@
 # Documentation Index
 
 - Status: **Canonical documentation map**
-- Updated: 2026-09-21
+- Updated: 2026-09-22
 
 This file explains where each class of project truth lives and how an implementer/reviewer should resolve ambiguity.
 
@@ -58,7 +58,8 @@ If a true conflict remains after applying this order, implementation must stop a
 - `gates/S01-I01_CORRECTION_R3.md` — correction record for S01-I01 review cycle 3.
 - `gates/S01-I01_CORRECTION_R4.md` — correction record for S01-I01 review cycle 4.
 - `gates/S01-I01_CORRECTION_R4_1.md` — residual correction record after R4 re-review.
-- `gates/S01-I01_CORRECTION_R5.md` — active final authority-closure correction record.
+- `gates/S01-I01_CORRECTION_R5.md` — final authority-closure correction record.
+- `checkpoints/S01-I01_PASS_2026-09-22.md` — accepted S01-I01 PASS checkpoint.
 - `CHECKPOINT_RECORD_TEMPLATE.md` — persisted checkpoint evidence.
 - `CORRECTION_CYCLE_TEMPLATE.md` — correction/re-verification record.
 - `SLICE_01_INCREMENT_PLAN.md` — increments S01-I01 … S01-I07.
