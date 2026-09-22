@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}تسجيل الدخول — المنصة الوطنية للتفتيش{% endblock %}
+
+{% block content %}
+<div class="card auth-card">
+    <h1 class="card__title">تسجيل الدخول</h1>
+
+    {% if form.non_field_errors %}
+        <div class="alert alert--error">
+            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'identity:login' %}">
+        {% csrf_token %}
+        <div class="form-field">
+            <label class="form-label" for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+            {{ form.username }}
+            {% for error in form.username.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+            {{ form.password }}
+            {% for error in form.password.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        <div class="form-field">
+            <button type="submit" class="button button--primary button--block">دخول</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

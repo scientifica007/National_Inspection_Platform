@@ -6,15 +6,86 @@
 
 **M0 — Foundation / Domain Design — COMPLETE**
 
-**Vertical Slice 01 — READY FOR AI EXECUTOR / CONTROLLED IMPLEMENTATION**
+**S01-I01 — Project Skeleton + Identity/Authority Foundation — IMPLEMENTED (بانتظار مراجعة مستقلة)**
 
-لا يوجد كود تطبيق بعد. المستودع يحتوي حاليًا على baseline التصميم والمعمارية والحَوْكمة ومواصفات أول تنفيذ.
+الكود موجود الآن على الفرع `build/slice-01`. لم يبدأ أي Increment لاحق.
 
 الحالة المرجعية الحالية:
 `docs/PROJECT_STATE.md`
 
 خريطة الوثائق:
 `docs/DOCUMENTATION_INDEX.md`
+
+سجل بوابة S01-I01:
+`docs/gates/S01-I01_GATE.md`
+
+ملاحظات التنفيذ:
+`docs/IMPLEMENTATION_NOTES_S01_I01.md`
+
+## التشغيل المحلي
+
+المتطلبات: Python 3.12 و PostgreSQL.
+
+```bash
+# 1) البيئة الافتراضية والاعتماديات
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+
+# 2) إعداد البيئة
+cp .env.example .env
+# عدّل .env محليًا: DJANGO_SECRET_KEY وبيانات PostgreSQL
+# لا تُودِع ملف .env إطلاقًا.
+
+# 3) قاعدة البيانات (PostgreSQL)
+sudo -u postgres psql -c "CREATE USER national_inspection WITH PASSWORD 'change-me-local-only' CREATEDB;"
+sudo -u postgres psql -c "CREATE DATABASE national_inspection OWNER national_inspection;"
+
+# 4) الترحيلات والتشغيل
+python manage.py migrate
+python manage.py runserver
+```
+
+### إنشاء أول Platform Admin
+
+هناك مسؤولان مختلفان تمامًا في هذا المشروع:
+
+| | Django superuser | Platform Admin |
+|---|---|---|
+| الطبقة | تقنية (Django) | تطبيقية (سلطة إدارية) |
+| الحقل | `is_superuser` / `is_staff` | `is_platform_admin` |
+| يمنح | الوصول إلى `/admin/` التقني | العمليات الإدارية داخل التطبيق |
+| لا يمنح | أي تأليف مهني | الوصول التقني إلى `/admin/` |
+
+**لا شيء منهما يمنح تأليفًا مهنيًا.** الصفة المهنية تُمنح فقط عبر
+`CapabilityGrant` صريح.
+
+`createsuperuser` ينشئ Django superuser (وهو مفيد لإدارة `/admin/`)، لكنه لا
+ينشئ Platform Admin تطبيقيًا. لإنشاء أول Platform Admin استخدم الأمر التقني:
+
+```bash
+# عيّن كلمة المرور في متغيّر بيئة، ثم شغّل الأمر، ثم أزل المتغيّر.
+export NIP_BOOTSTRAP_PASSWORD='ضع-كلمة-مرور-قوية-هنا'
+python manage.py bootstrap_platform_admin --username admin --display-name "المدير الأول"
+unset NIP_BOOTSTRAP_PASSWORD
+```
+
+هذا الأمر جزء من حدود النشر التقنية: لا يوجد له مسار HTTP ولا قالب، وكلمة
+المرور تُقرأ من متغيّر بيئة فقط ولا تُخزَّن في المستودع. وهو ينشئ الحساب والشخص
+المرتبط به داخل معاملة واحدة، ولا يمنح أي صلاحية مهنية.
+
+الفحوصات:
+
+```bash
+ruff check .
+ruff format --check .
+python manage.py check
+python manage.py makemigrations --check --dry-run
+pytest -q
+```
+
+ملاحظة: `CREATEDB` هي الصلاحية الوحيدة المطلوبة محليًا، لأن pytest-django
+يُنشئ قاعدة اختبار مؤقتة. لا تُمنح `CREATEROLE` أو `SUPERUSER`.
 
 ## المبادئ المؤسسة
 

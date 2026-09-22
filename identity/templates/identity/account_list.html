@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}الحسابات — المنصة الوطنية للتفتيش{% endblock %}
+
+{% block content %}
+<header class="page__header">
+    <h1 class="page__title">الحسابات</h1>
+    <p class="page__subtitle">
+        هذه الصفحة للعرض الإداري فقط. لا تسمح بالتصرف نيابة عن أي شخص آخر.
+    </p>
+</header>
+
+<section class="card">
+    {% if accounts %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th scope="col">اسم المستخدم</th>
+                    <th scope="col">الشخص</th>
+                    <th scope="col">مدير المنصة</th>
+                    <th scope="col">الحالة</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in accounts %}
+                    <tr>
+                        <td>{{ item.username }}</td>
+                        <td>{{ item.person.display_name }}</td>
+                        <td>{{ item.is_platform_admin|yesno:"نعم,لا" }}</td>
+                        <td>{{ item.is_active|yesno:"نشط,معطَّل" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty-state">لا توجد حسابات لعرضها.</div>
+    {% endif %}
+</section>
+{% endblock %}

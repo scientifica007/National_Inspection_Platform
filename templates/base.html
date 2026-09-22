@@ -1,0 +1,44 @@
+{% load static %}{% load i18n %}<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE|default:'ar' }}" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}المنصة الوطنية للتفتيش{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/design-tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+    <a class="skip-link" href="#main-content">تخطَّ إلى المحتوى</a>
+
+    <header class="site-header">
+        <div class="site-header__inner">
+            <a class="site-header__brand" href="{% url 'identity:dashboard' %}">المنصة الوطنية للتفتيش</a>
+            <nav class="site-nav" aria-label="التنقل الرئيسي">
+                {% if user.is_authenticated %}
+                    <a class="site-nav__link" href="{% url 'identity:dashboard' %}">لوحة المتابعة</a>
+                    {% if is_platform_admin %}
+                        <a class="site-nav__link" href="{% url 'identity:account-list' %}">الحسابات</a>
+                    {% endif %}
+                    <span class="site-nav__link text-muted">{{ user.person.display_name }}</span>
+                    <form method="post" action="{% url 'identity:logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="site-nav__link" style="background:none;border:none;cursor:pointer;font:inherit;">خروج</button>
+                    </form>
+                {% else %}
+                    <a class="site-nav__link" href="{% url 'identity:login' %}">دخول</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main id="main-content" class="page">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert--{{ message.tags|default:'error' }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

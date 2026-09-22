@@ -1,0 +1,315 @@
+/* Base presentation layer — National Inspection Platform
+ *
+ * Consumes only Design Tokens. No business rule, permission or lifecycle
+ * decision appears in CSS (docs/ARCHITECTURE_PRINCIPLES.md).
+ *
+ * Arabic-first, RTL-native: layout uses logical properties so DOM order stays
+ * meaningful and no visual mirroring hacks are needed.
+ */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    background-color: var(--color-canvas);
+    color: var(--color-text);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+}
+
+/* --- Layout primitives --- */
+
+.skip-link {
+    position: absolute;
+    inset-block-start: -100%;
+    inset-inline-start: var(--space-4);
+    background: var(--color-primary);
+    color: var(--color-text-inverted);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-sm);
+    z-index: 100;
+}
+
+.skip-link:focus {
+    inset-block-start: var(--space-2);
+}
+
+.site-header {
+    background-color: var(--color-surface);
+    border-block-end: 1px solid var(--color-border);
+}
+
+.site-header__inner {
+    max-inline-size: var(--layout-max-width);
+    margin-inline: auto;
+    padding: var(--space-3) var(--layout-gutter);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.site-header__brand {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+.site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-inline-start: auto;
+    align-items: center;
+}
+
+.site-nav__link {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: var(--font-size-sm);
+}
+
+.site-nav__link:hover,
+.site-nav__link:focus-visible {
+    color: var(--color-primary);
+}
+
+.page {
+    max-inline-size: var(--layout-max-width);
+    margin-inline: auto;
+    padding: var(--space-6) var(--layout-gutter) var(--space-8);
+}
+
+.page__header {
+    margin-block-end: var(--space-6);
+}
+
+.page__title {
+    font-size: var(--font-size-2xl);
+    line-height: var(--line-height-tight);
+    margin: 0 0 var(--space-2);
+}
+
+.page__subtitle {
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
+/* --- Cards --- */
+
+.card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-sm);
+}
+
+.card + .card {
+    margin-block-start: var(--space-4);
+}
+
+.card__title {
+    font-size: var(--font-size-lg);
+    margin: 0 0 var(--space-3);
+}
+
+.grid {
+    display: grid;
+    gap: var(--space-4);
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+/* --- Status badges --- */
+
+.badge {
+    display: inline-block;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-pill);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--line-height-tight);
+}
+
+.badge--info {
+    background-color: var(--color-info-soft);
+    color: var(--color-info);
+}
+
+.badge--success {
+    background-color: var(--color-success-soft);
+    color: var(--color-success);
+}
+
+.badge--neutral {
+    background-color: var(--color-surface-muted);
+    color: var(--color-text-muted);
+}
+
+/* --- Definition lists --- */
+
+.meta-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.meta-list > li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-block: var(--space-2);
+    border-block-end: 1px solid var(--color-border);
+}
+
+.meta-list > li:last-child {
+    border-block-end: none;
+}
+
+.meta-list__label {
+    color: var(--color-text-muted);
+}
+
+/* --- Forms --- */
+
+.auth-card {
+    max-inline-size: 420px;
+    margin: var(--space-7) auto;
+}
+
+.form-field + .form-field {
+    margin-block-start: var(--space-4);
+}
+
+.form-label {
+    display: block;
+    margin-block-end: var(--space-2);
+    font-weight: var(--font-weight-medium);
+}
+
+.field-input {
+    inline-size: 100%;
+    padding: var(--space-3);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: var(--font-size-base);
+}
+
+.field-input:focus-visible {
+    outline: none;
+    border-color: var(--color-focus);
+    box-shadow: var(--focus-ring);
+}
+
+.form-error {
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
+    margin-block-start: var(--space-2);
+}
+
+.alert {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    margin-block-end: var(--space-4);
+    font-size: var(--font-size-sm);
+}
+
+.alert--error {
+    background-color: var(--color-danger-soft);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
+}
+
+/* --- Buttons --- */
+
+.button {
+    display: inline-block;
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    font-family: inherit;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+}
+
+.button--primary {
+    background-color: var(--color-primary);
+    color: var(--color-text-inverted);
+}
+
+.button--primary:hover,
+.button--primary:focus-visible {
+    background-color: var(--color-primary-hover);
+}
+
+.button--block {
+    inline-size: 100%;
+}
+
+.button:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+/* --- Tables --- */
+
+.data-table {
+    inline-size: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    text-align: start;
+    padding: var(--space-3);
+    border-block-end: 1px solid var(--color-border);
+}
+
+.data-table th {
+    color: var(--color-text-muted);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+}
+
+.empty-state {
+    color: var(--color-text-muted);
+    background-color: var(--color-surface-muted);
+    border-radius: var(--radius-sm);
+    padding: var(--space-5);
+    text-align: center;
+}
+
+.text-muted {
+    color: var(--color-text-muted);
+}
+
+@media (max-width: 520px) {
+    .page {
+        padding-block-start: var(--space-4);
+    }
+
+    .site-header__inner {
+        gap: var(--space-2);
+    }
+
+    .site-nav {
+        inline-size: 100%;
+        margin-inline-start: 0;
+    }
+}

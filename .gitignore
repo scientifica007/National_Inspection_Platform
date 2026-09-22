@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Django
+*.log
+local_settings.py
+staticfiles/
+media/
+
+# Databases / local database artifacts
+*.sqlite3
+db.sqlite3
+*.dump
+*.sql
+*.psql
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.tox/
+.nox/
+playwright-report/
+test-results/
+
+# Ruff / mypy / editors
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+.idea/
+.vscode/
+*.swp
+.DS_Store
