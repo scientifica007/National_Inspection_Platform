@@ -93,7 +93,18 @@ No S01-I03 or later work is authorized.
 S01-I01 executor:
 **OpenHands Cloud**, under the controlled executor/reviewer/correction cycle.
 
-Executor selection and the exact S01-I02 implementation prompt remain to be prepared before implementation starts.
+S01-I02 selected executor:
+**Codex**, as a controlled executor switch for this increment.
+
+Prepared control documents:
+- `docs/S01_I02_EXPECTED_OUTPUTS.md`
+- `docs/CODEX_EXECUTOR_PROMPT_S01_I02.md`
+- `docs/gates/S01-I02_GATE.md`
+
+Dedicated implementation branch:
+`build/s01-i02`
+
+Codex must implement S01-I02 only, open a draft PR, stop at `HOLD — RE-REVIEW REQUIRED`, and must not start S01-I03.
 
 ## Accepted architectural baseline
 
