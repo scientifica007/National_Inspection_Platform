@@ -100,9 +100,11 @@ Introduce local Institution master data as the first business module while prese
 
 - branch: `build/s01-i02`
 - starting main SHA: `dd2a17dbb161f342631c7e468223ce02197622d8`
-- implementation commits: recorded in Git history for `build/s01-i02`; exact final head recorded in the PR/final executor report.
+- implementation commits:
+  - `0e424eb` — Implement S01-I02 local institutions.
+  - final evidence commit recorded in the PR/final executor report.
 - final head: recorded in the PR/final executor report after the final evidence push.
-- draft PR: pending creation.
+- draft PR: https://github.com/scientifica007/National_Inspection_Platform/pull/2
 - files/modules changed:
   - new `institutions` app.
   - `config` app registration and URL routing.
